@@ -35,9 +35,7 @@ class PriceRule(IdMixin, Base):
     effective_from: Mapped[date] = mapped_column(Date, nullable=False)
     effective_to: Mapped[date | None] = mapped_column(Date)
     note: Mapped[str | None] = mapped_column(Text)
-    created_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id")
-    )
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
 
 
 class SubsidyRule(IdMixin, Base):
@@ -58,9 +56,7 @@ class SubsidyRule(IdMixin, Base):
     effective_from: Mapped[date] = mapped_column(Date, nullable=False)
     effective_to: Mapped[date | None] = mapped_column(Date)
     source_note: Mapped[str] = mapped_column(Text, nullable=False)
-    created_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id")
-    )
+    created_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
 
 
 class Setting(Base):
@@ -70,9 +66,7 @@ class Setting(Base):
 
     key: Mapped[str] = mapped_column(Text, primary_key=True)
     value: Mapped[Any] = mapped_column(JSONB, nullable=False)
-    updated_by: Mapped[uuid.UUID | None] = mapped_column(
-        UUID(as_uuid=True), ForeignKey("users.id")
-    )
+    updated_by: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
     updated_at: Mapped[datetime] = mapped_column(
         DateTime(timezone=True), server_default=func.now(), nullable=False
     )

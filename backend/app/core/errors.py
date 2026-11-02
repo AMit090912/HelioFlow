@@ -85,7 +85,10 @@ def install_error_handlers(app: FastAPI) -> None:
     async def _unhandled(request: Request, exc: Exception) -> JSONResponse:
         # Log type + path only: exception text can contain user input or personal data.
         logger.error(
-            "unhandled %s on %s %s", type(exc).__name__, request.method, request.url.path,
+            "unhandled %s on %s %s",
+            type(exc).__name__,
+            request.method,
+            request.url.path,
             exc_info=exc,
         )
         return error_response(500, "INTERNAL_ERROR", "Something went wrong.")

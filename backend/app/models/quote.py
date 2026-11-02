@@ -54,7 +54,9 @@ class Quote(IdMixin, Base):
 
     # Lifecycle — each set once, only via allowed transitions
     status: Mapped[QuoteStatus] = mapped_column(
-        pg_enum(QuoteStatus, "quote_status"), nullable=False, default=QuoteStatus.sent,
+        pg_enum(QuoteStatus, "quote_status"),
+        nullable=False,
+        default=QuoteStatus.sent,
         server_default="sent",
     )
     selected_kw: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))

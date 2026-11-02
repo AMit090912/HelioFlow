@@ -23,7 +23,9 @@ class Project(IdMixin, Base):
         UUID(as_uuid=True), ForeignKey("quotes.id"), nullable=False
     )
     stage: Mapped[ProjectStage] = mapped_column(
-        STAGE_ENUM, nullable=False, default=ProjectStage.advance_received,
+        STAGE_ENUM,
+        nullable=False,
+        default=ProjectStage.advance_received,
         server_default="advance_received",
     )
     stage_changed_at: Mapped[datetime] = mapped_column(

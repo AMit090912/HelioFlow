@@ -12,9 +12,7 @@ class Notification(IdMixin, Base):
     """Simulated WhatsApp/SMS outbox. Nothing is ever sent externally (§13)."""
 
     __tablename__ = "notifications"
-    __table_args__ = (
-        CheckConstraint("delivery_status = 'simulated'", name="simulated_only"),
-    )
+    __table_args__ = (CheckConstraint("delivery_status = 'simulated'", name="simulated_only"),)
 
     lead_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("leads.id"), nullable=False, index=True

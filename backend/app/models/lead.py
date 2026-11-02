@@ -48,7 +48,9 @@ class Lead(IdMixin, Base):
     consent_version: Mapped[str] = mapped_column(Text, nullable=False)
 
     status: Mapped[LeadStatus] = mapped_column(
-        pg_enum(LeadStatus, "lead_status"), nullable=False, default=LeadStatus.draft,
+        pg_enum(LeadStatus, "lead_status"),
+        nullable=False,
+        default=LeadStatus.draft,
         server_default="draft",
     )
     score: Mapped[LeadScore | None] = mapped_column(pg_enum(LeadScore, "lead_score"))

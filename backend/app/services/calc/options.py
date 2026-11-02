@@ -40,7 +40,8 @@ def quote_options(
     sizes = settings.capacity_options_kw
     if recommended_kw not in sizes:
         raise CalcError(
-            "INVALID_INPUT", "The recommended size is not a configured option.",
+            "INVALID_INPUT",
+            "The recommended size is not a configured option.",
             field="recommended_kw",
         )
     at = sizes.index(recommended_kw)
