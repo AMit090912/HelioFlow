@@ -14,7 +14,8 @@ class BillFile(IdMixin, Base):
     """Stored upload. Bytes are deferred so listing queries never load them (§3.3)."""
 
     __tablename__ = "bill_files"
-    __table_args__ = (Index("ix_bill_files_lead_sha", "lead_id", "sha256"),)
+    # Unique: the same file uploaded twice for one lead (e.g. a double-submit) is one reading.
+    __table_args__ = (Index("uq_bill_files_lead_sha", "lead_id", "sha256", unique=True),)
 
     lead_id: Mapped[uuid.UUID] = mapped_column(
         UUID(as_uuid=True), ForeignKey("leads.id"), nullable=False
@@ -41,16 +42,17 @@ class BillReading(IdMixin, Base):
         UUID(as_uuid=True), ForeignKey("bill_files.id"), nullable=False, unique=True
     )
     status: Mapped[ReadingStatus] = mapped_column(
-        pg_enum(ReadingStatus, "reading_status"), nullable=False,
-        default=ReadingStatus.processing, server_default="processing",
+        pg_enum(ReadingStatus, "reading_status"),
+        nullable=False,
+        default=ReadingStatus.processing,
+        server_default="processing",
     )
+    processing_started_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     quality: Mapped[dict | None] = mapped_column(JSONB)
     source_path: Mapped[ReadingSource | None] = mapped_column(
         pg_enum(ReadingSource, "reading_source")
     )
-    attempts: Mapped[list] = mapped_column(
-        JSONB, nullable=False, default=list, server_default="[]"
-    )
+    attempts: Mapped[list] = mapped_column(JSONB, nullable=False, default=list, server_default="[]")
     provider: Mapped[str | None] = mapped_column(Text)
     model: Mapped[str | None] = mapped_column(Text)
     prompt_version: Mapped[str | None] = mapped_column(Text)

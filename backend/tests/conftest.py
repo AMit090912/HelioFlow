@@ -24,6 +24,7 @@ BACKEND_DIR = Path(__file__).resolve().parents[1]
 os.environ.setdefault("ENV", "test")
 os.environ.setdefault("JWT_SECRET", "test-only-secret-not-used-anywhere-else")
 os.environ.setdefault("COOKIE_SECURE", "false")
+os.environ["AI_MODE"] = "test"  # never call real Groq/Gemini from the test suite
 get_settings.cache_clear()
 
 

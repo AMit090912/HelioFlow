@@ -1,12 +1,66 @@
+import logging
+import re
+
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, dev, health, rules
-from app.core.config import get_settings
+from app.api import auth, bills, dev, health, rules
+from app.core.config import Settings, get_settings
+from app.core.db import SessionLocal
 from app.core.errors import error_response, install_error_handlers
 from app.core.ratelimit import SlidingWindowLimiter
+from app.services.ai import GeminiProvider, GroqProvider, Provider
+from app.services.ai.demo import DemoProvider
+
+
+def providers_for(settings: Settings):
+    """Provider chain per upload (ARCHITECTURE §6.5): live Groq → Gemini, labelled demo, or none
+    in tests (where fakes are injected)."""
+    if settings.ai_mode == "demo":
+        return lambda sha: [DemoProvider(sha)]
+    if settings.ai_mode == "test":
+        return lambda sha: []
+    chain: list[Provider] = []
+    if settings.groq_api_key:
+        chain.append(
+            GroqProvider(
+                settings.groq_api_key,
+                settings.groq_vision_model,
+                settings.groq_text_model,
+                timeout=settings.ai_timeout_seconds,
+            )
+        )
+    if settings.gemini_api_key:
+        chain.append(
+            GeminiProvider(
+                settings.gemini_api_key, settings.gemini_model, timeout=settings.ai_timeout_seconds
+            )
+        )
+    if not chain:
+        logging.getLogger("helio.ai").warning(
+            "AI_MODE=live but no GROQ_API_KEY or GEMINI_API_KEY: every bill will need manual entry"
+        )
+    return lambda sha: chain
+
 
 UNSAFE_METHODS = {"POST", "PUT", "PATCH", "DELETE"}
+_UPLOAD_PATH = re.compile(r"^/api/leads/[^/]+/bills$")
+_MULTIPART_OVERHEAD = 256 * 1024
+
+
+def _oversized_upload(request: Request, max_mb: int):
+    """Refuse an oversized bill upload from its Content-Length, before the multipart parser
+    receives (and spools) the whole body (§5.1)."""
+    if request.method != "POST" or not _UPLOAD_PATH.match(request.url.path):
+        return None
+    length = request.headers.get("content-length")
+    if length is None:
+        return error_response(411, "LENGTH_REQUIRED", "Upload size is required.")
+    if not length.isdigit() or int(length) > max_mb * 1024 * 1024 + _MULTIPART_OVERHEAD:
+        return error_response(413, "FILE_TOO_LARGE", f"This file is larger than {max_mb} MB.")
+    return None
+
+
 SECURITY_HEADERS = {
     "X-Content-Type-Options": "nosniff",
     "X-Frame-Options": "DENY",
@@ -18,6 +72,10 @@ def create_app() -> FastAPI:
     settings = get_settings()
     app = FastAPI(title="HelioFlow API", version="0.1.0")
     app.state.login_limiter = SlidingWindowLimiter(limit=5, window_seconds=60)
+    app.state.upload_limiter = SlidingWindowLimiter(limit=10, window_seconds=3600)
+    # Background bill reading gets its own session and provider chain; tests swap both.
+    app.state.session_factory = SessionLocal
+    app.state.ai_providers = providers_for(settings)
     install_error_handlers(app)
 
     @app.middleware("http")
@@ -29,6 +87,8 @@ def create_app() -> FastAPI:
             and request.headers.get("x-hf-csrf") != "1"
         ):
             response = error_response(403, "CSRF_HEADER_MISSING", "Missing request header.")
+        elif (too_big := _oversized_upload(request, settings.max_upload_mb)) is not None:
+            response = too_big
         else:
             response = await call_next(request)
         for name, value in SECURITY_HEADERS.items():
@@ -47,6 +107,7 @@ def create_app() -> FastAPI:
     app.include_router(health.router, prefix="/api")
     app.include_router(auth.router, prefix="/api")
     app.include_router(rules.router, prefix="/api")
+    app.include_router(bills.router, prefix="/api")
     if settings.env != "production":
         app.include_router(dev.router, prefix="/api")
     return app
