@@ -1,0 +1,39 @@
+import type { NextConfig } from "next";
+import createNextIntlPlugin from "next-intl/plugin";
+
+const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
+
+const SECURITY_HEADERS = [
+  { key: "X-Content-Type-Options", value: "nosniff" },
+  { key: "X-Frame-Options", value: "DENY" },
+  { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+];
+
+const nextConfig: NextConfig = {
+  poweredByHeader: false,
+  experimental: {
+    // Next buffers proxied request bodies and drops the connection past this size (default
+    // 10 MB). Bills may be 10 MB plus multipart overhead; FastAPI enforces the real 10 MB
+    // limit with a clean 413 (ARCHITECTURE §5.1, Q-9). Verified locally in M1.
+    proxyClientMaxBodySize: "12mb",
+  },
+  turbopack: {
+    rules: {
+      "*.css": {
+        loaders: ["@tailwindcss/turbopack"],
+        as: "*.css",
+      },
+    },
+  },
+  // Same-origin API: the browser only ever talks to this app; FastAPI sits behind it (§1).
+  // BACKEND_URL is server-only (no NEXT_PUBLIC_ prefix).
+  async rewrites() {
+    const backend = process.env.BACKEND_URL ?? "http://localhost:8000";
+    return [{ source: "/api/:path*", destination: `${backend}/api/:path*` }];
+  },
+  async headers() {
+    return [{ source: "/:path*", headers: SECURITY_HEADERS }];
+  },
+};
+
+export default withNextIntl(nextConfig);

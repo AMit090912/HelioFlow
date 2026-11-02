@@ -1,0 +1,109 @@
+{
+  "common": {
+    "appName": "HelioFlow",
+    "tagline": "From First Lead to Solar Power.",
+    "languageLabel": "Language",
+    "signIn": "Sign in",
+    "menu": "Menu",
+    "signOut": "Sign out",
+    "loading": "Loading…",
+    "retry": "Try again",
+    "footer": "HelioFlow for Company A, Nagpur. Rooftop solar for homes and small businesses across Vidarbha.",
+    "languages": {
+      "en": "English",
+      "hi": "हिन्दी",
+      "mr": "मराठी"
+    }
+  },
+  "landing": {
+    "title": "Find out what solar will save on your roof.",
+    "lede": "Answer a few questions and upload your electricity bill. We'll recommend a system size and tell you whether a site visit makes sense, usually within a day.",
+    "cta": "Check if solar fits my home",
+    "staffLink": "Staff sign in",
+    "stepsTitle": "How it works",
+    "steps": {
+      "home": {
+        "title": "Tell us about your home",
+        "body": "Owner or tenant, roof type and area, monthly bill and pincode."
+      },
+      "bill": {
+        "title": "Upload your electricity bill",
+        "body": "A photo or a PDF. We read the units and sanctioned load, and you check the values."
+      },
+      "quote": {
+        "title": "Get your quote",
+        "body": "System size, subsidy, cost after subsidy and an estimated payback, sent the same day as your survey."
+      }
+    },
+    "kicker": "Rooftop solar for homes across Vidarbha",
+    "haveAccount": "Already started? Sign in",
+    "facts": {
+      "bill": "We read your electricity bill for you",
+      "subsidy": "Central subsidy worked out from current rules",
+      "visit": "A site visit only when it makes sense"
+    },
+    "example": {
+      "title": "Your quote, told in three numbers",
+      "body": "This is what a quote looks like for a home using about 340 units a month.",
+      "size": "System size",
+      "sizeValue": "3 kW",
+      "net": "Cost after subsidy",
+      "netValue": "₹1,02,000",
+      "netNote": "after ₹78,000 subsidy",
+      "payback": "Pays for itself in",
+      "paybackValue": "about 3 years",
+      "note": "Example only. Prices, subsidy and savings are estimates until your survey, and savings are not guaranteed."
+    }
+  },
+  "auth": {
+    "title": "Sign in",
+    "subtitle": "Use the email or mobile number you registered with.",
+    "identifier": "Email or mobile number",
+    "password": "Password",
+    "submit": "Sign in",
+    "submitting": "Signing in…",
+    "noAccount": "New here? Start with the solar check.",
+    "identifierRequired": "Enter your email or mobile number.",
+    "passwordShort": "Password must be at least 8 characters.",
+    "panelBody": "Your bill, your roof and your quote, in one place."
+  },
+  "errors": {
+    "NOT_FOUND": "We couldn't find that page or record.",
+    "VALIDATION_ERROR": "Some details aren't right. Check the highlighted fields.",
+    "NOT_AUTHENTICATED": "Please sign in.",
+    "FORBIDDEN": "You don't have access to this.",
+    "CSRF_HEADER_MISSING": "The request was incomplete. Refresh the page and try again.",
+    "RATE_LIMITED": "Too many attempts. Wait a minute and try again.",
+    "INVALID_CREDENTIALS": "Those details don't match an account.",
+    "ACCOUNT_EXISTS": "An account with these details already exists. Sign in instead.",
+    "PASSWORD_TOO_COMMON": "That password is too common. Choose another.",
+    "IDENTIFIER_REQUIRED": "Enter an email or a mobile number.",
+    "PHONE_INVALID": "Enter a 10-digit Indian mobile number.",
+    "EMAIL_INVALID": "Enter a valid email address.",
+    "INTERNAL_ERROR": "Something went wrong on our side. Try again in a moment.",
+    "NETWORK": "We couldn't reach the server. Check your connection and try again.",
+    "UNKNOWN": "Something went wrong. Try again."
+  },
+  "home": {
+    "title": "My solar",
+    "greeting": "Hello, {name}",
+    "empty": "Your solar check will appear here once you start it.",
+    "emptyTitle": "Your roof is waiting"
+  },
+  "staff": {
+    "navLeads": "Leads",
+    "leadsTitle": "Leads",
+    "leadsEmpty": "New enquiries appear here as soon as a homeowner submits the form.",
+    "forbiddenTitle": "This area is for HelioFlow staff",
+    "forbiddenBody": "You're signed in as a homeowner.",
+    "forbiddenAction": "Go to my solar",
+    "workspace": "Sales workspace",
+    "leadsSubtitle": "New enquiries, scored and ready for a visit or a call.",
+    "leadsEmptyTitle": "No leads yet"
+  },
+  "server": {
+    "waking": "Waking up the server…",
+    "wakingHint": "After a quiet period the first request can take up to a minute.",
+    "unreachable": "We couldn't reach the server."
+  }
+}

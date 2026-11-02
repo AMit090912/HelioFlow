@@ -1,0 +1,169 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "shadcn/tailwind.css";
+
+/*
+ * HelioFlow design tokens (ARCHITECTURE §20, colours sampled from the client logo).
+ *   teal  #006863  contrast on white 6.64:1  → actions, focus, links (AA for text)
+ *   gold  #E5B257  contrast on white 1.94:1  → decorative only (sun mark, horizon line); never text on white
+ *   night #012E2B                            → dusk sections (hero, staff sidebar); white text 13.9:1
+ *   gold on night 8.1:1                      → primary button on dark, sun illustrations
+ *   gold-soft #F6DFA8 on night 12:1          → small accent text on dark only
+ *   amber #B45309 on #FEF3C7                 → attention only (Low score, flags, stuck)
+ *   red   #B91C1C                            → errors only
+ */
+:root {
+  --hf-teal: #006863;
+  --hf-teal-deep: #004a46;
+  --hf-teal-wash: #e3efed;
+  --hf-night: #012e2b;
+  --hf-night-2: #0a4540;
+  --hf-gold: #e5b257;
+  --hf-gold-soft: #f6dfa8;
+  --hf-paper: #ffffff;
+  --hf-surface: #f2f6f5;
+  --hf-line: #dce4e2;
+  --hf-ink: #18211f;
+  --hf-ink-2: #4f5d5a;
+  --hf-attention: #b45309;
+  --hf-attention-bg: #fef3c7;
+  --hf-error: #b91c1c;
+
+  --background: var(--hf-paper);
+  --foreground: var(--hf-ink);
+  --card: var(--hf-paper);
+  --card-foreground: var(--hf-ink);
+  --popover: var(--hf-paper);
+  --popover-foreground: var(--hf-ink);
+  --primary: var(--hf-teal);
+  --primary-foreground: #ffffff;
+  --secondary: var(--hf-surface);
+  --secondary-foreground: var(--hf-ink);
+  --muted: var(--hf-surface);
+  --muted-foreground: var(--hf-ink-2);
+  --accent: var(--hf-teal-wash);
+  --accent-foreground: var(--hf-teal-deep);
+  --destructive: var(--hf-error);
+  --border: var(--hf-line);
+  --input: #c9d4d1;
+  --ring: var(--hf-teal);
+  --radius: 0.75rem;
+}
+
+@theme inline {
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+
+  --color-teal: var(--hf-teal);
+  --color-teal-deep: var(--hf-teal-deep);
+  --color-teal-wash: var(--hf-teal-wash);
+  --color-gold: var(--hf-gold);
+  --color-gold-soft: var(--hf-gold-soft);
+  --color-night: var(--hf-night);
+  --color-night-2: var(--hf-night-2);
+  --color-surface: var(--hf-surface);
+  --color-ink: var(--hf-ink);
+  --color-ink-2: var(--hf-ink-2);
+  --color-attention: var(--hf-attention);
+  --color-attention-bg: var(--hf-attention-bg);
+
+  --font-sans: var(--font-mukta), ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-anek), var(--font-mukta), ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-anek), var(--font-mukta), ui-sans-serif, system-ui, sans-serif;
+
+  --radius-sm: calc(var(--radius) * 0.6);
+  --radius-md: calc(var(--radius) * 0.8);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) * 1.4);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  html {
+    @apply font-sans;
+    -webkit-text-size-adjust: 100%;
+  }
+  body {
+    @apply bg-background text-foreground antialiased;
+    line-height: 1.55;
+  }
+  h1, h2, h3 {
+    text-wrap: balance;
+    line-height: 1.15;
+  }
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
+  :focus-visible {
+    outline: 2px solid var(--hf-teal);
+    outline-offset: 2px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
+
+/*
+ * Devanagari needs extra leading so matras and conjuncts don't clip (§20).
+ * Unlayered on purpose: it must beat Tailwind's text-size utilities, which set line-height.
+ */
+html:lang(hi) body,
+html:lang(mr) body {
+  line-height: 1.7;
+}
+html:lang(hi) :is(p, li, label, input),
+html:lang(mr) :is(p, li, label, input) {
+  line-height: 1.7;
+}
+html:lang(hi) :is(h1, h2, h3),
+html:lang(mr) :is(h1, h2, h3) {
+  line-height: 1.35;
+}
+
+/* Display type: Anek Devanagari, semi-expanded — one voice for Latin and Devanagari. */
+@utility font-display {
+  font-family: var(--font-display);
+  font-stretch: 112%;
+  letter-spacing: -0.01em;
+}
+
+/* The one orchestrated motion: energy flowing along the sun → panel → home line (sign-in). */
+@keyframes hf-flow {
+  to { stroke-dashoffset: -48; }
+}
+.hf-flow {
+  animation: hf-flow 2.4s linear infinite;
+}
+
+@keyframes hf-slide {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(300%); }
+}
+
+@utility tabular {
+  font-variant-numeric: tabular-nums;
+}
