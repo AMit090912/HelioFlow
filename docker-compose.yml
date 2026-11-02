@@ -1,0 +1,21 @@
+# Local development database only. Credentials here are local-only, not secrets.
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: helio
+      POSTGRES_PASSWORD: helio
+      POSTGRES_DB: helio
+    ports:
+      - "5433:5432"
+    volumes:
+      - helio_pg:/var/lib/postgresql/data
+      - ./docker/initdb:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U helio -d helio"]
+      interval: 3s
+      timeout: 3s
+      retries: 20
+
+volumes:
+  helio_pg:

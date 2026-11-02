@@ -1,0 +1,34 @@
+# Secrets — never commit real env files
+.env
+.env.*
+!*.env.example
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+.venv/
+.pytest_cache/
+.ruff_cache/
+.coverage
+coverage/
+htmlcov/
+
+# Node / Next.js
+node_modules/
+.next/
+out/
+next-env.d.ts
+*.tsbuildinfo
+playwright-report/
+test-results/
+
+# Tooling scratch
+.claude/settings.local.json
+.superpowers/
+
+# OS / editors
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
