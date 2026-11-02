@@ -412,6 +412,15 @@ all failed → status failed_manual → homeowner sees the manual entry form; le
 
 Every attempt is recorded in `bill_readings.attempts`. Raw provider responses are stored without being logged to stdout.
 
+**Models in use** (env-configurable, verified against the live accounts on 2026-11-03):
+
+| Path | Primary (Groq) | Fallback (Gemini) |
+|---|---|---|
+| Photo or scanned PDF (vision) | `qwen/qwen3.8-27b` (accepts images; the Llama vision models were not available on this account) | `gemini-2.5-flash` |
+| Text PDF | `openai/gpt-oss-120b` | `gemini-2.5-flash` |
+
+**Live check on the synthetic sample bill** (`scripts/live_bill_check.py`): all three paths read all six fields correctly with confidence 1.0 (Groq vision 2.4 s including one real rate-limit retry, Groq text 1.7 s, Gemini 6.0 s). Groq is fronted by Cloudflare, which rejects default library user agents, so every request sends an explicit `User-Agent`.
+
 ### 6.3 Sanity validation (deterministic, after the AI)
 
 | Rule | Action if violated |
