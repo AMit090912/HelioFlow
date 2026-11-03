@@ -68,10 +68,11 @@ async def upload_bill(
 ):
     lead = get_owned_or_404(db, Lead, lead_id, user)
     limiter: SlidingWindowLimiter = request.app.state.upload_limiter
+    attempts: SlidingWindowLimiter = request.app.state.upload_attempt_limiter
     key = f"upload|{user.id}"
-    if limiter.is_blocked(key):
-        raise ApiError(429, "RATE_LIMITED", "Too many uploads. Try again later.")
-    limiter.record(key)
+    if limiter.is_blocked(key) or attempts.is_blocked(key):
+        raise ApiError(429, "UPLOAD_LIMIT", "Too many uploads in the last hour. Try again later.")
+    attempts.record(key)
 
     max_mb = get_settings().max_upload_mb
     data = await _read_capped(file, max_mb)
@@ -80,6 +81,8 @@ async def upload_bill(
         accepted = await run_in_threadpool(accept_upload, db, lead, data, max_mb)
     except UploadError as exc:
         raise ApiError(exc.status, exc.code, exc.message) from exc
+    if accepted.created:
+        limiter.record(key)  # only a new, accepted bill counts towards the hourly ten
 
     if accepted.needs_ai:
         background.add_task(

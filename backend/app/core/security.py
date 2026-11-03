@@ -14,7 +14,7 @@ from app.core.config import get_settings
 
 _hasher = PasswordHash.recommended()  # argon2id
 _ALGORITHM = "HS256"
-_PHONE_RE = re.compile(r"^[6-9]\d{9}$")
+_PHONE_RE = re.compile(r"^[6-9][0-9]{9}$")  # ASCII digits only (\d matches ٤ and ４)
 _COMMON_PASSWORDS_FILE = Path(__file__).with_name("common_passwords.txt")
 
 
@@ -83,7 +83,7 @@ def normalize_email(raw: str) -> str:
 def normalize_phone(raw: str) -> str | None:
     """Indian mobile number as 10 digits, accepting +91 / 91 / 0 prefixes and separators."""
     digits = re.sub(r"[\s\-()+]", "", raw or "")
-    if not digits.isdigit():
+    if not digits or not all(c in "0123456789" for c in digits):
         return None
     if len(digits) == 12 and digits.startswith("91"):
         digits = digits[2:]

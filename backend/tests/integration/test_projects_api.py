@@ -272,3 +272,30 @@ def test_tokens_are_redacted_from_access_logs():
     )
     RedactSecretPaths().filter(record)
     assert "AbC-123_xyz" not in record.getMessage() and "/status/****" in record.getMessage()
+
+
+@pytest.mark.parametrize("amount", ["0.001", "0.5", "25000.123"])
+def test_advance_is_whole_paise_and_at_least_a_rupee(client, accepted, amount):
+    """The column holds paise; anything finer would be silently rounded (₹0.001 became ₹0)."""
+    res = advance(client, accepted, amount)
+    assert res.status_code == 422, res.text
+
+
+def test_installation_date_is_within_two_years(client, project):
+    pid, _ = project
+    far = move(client, pid, "installation_scheduled", scheduled_for="9999-12-31")
+    assert (far.status_code, far.json()["error"]["code"]) == (422, "DATE_TOO_FAR")
+
+
+def test_revoking_twice_logs_once(client, project, db_session):
+    from sqlalchemy import func, select
+
+    from app.models import LeadEvent
+
+    pid, _ = project
+    for _ in range(2):
+        assert client.delete(f"/api/staff/projects/{pid}/link", headers=CSRF).status_code == 204
+    count = db_session.scalar(
+        select(func.count()).select_from(LeadEvent).where(LeadEvent.kind == "link_revoked")
+    )
+    assert count == 1

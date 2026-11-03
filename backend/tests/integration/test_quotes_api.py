@@ -346,3 +346,48 @@ def test_inbox_row_shows_the_accepted_size(client, lead, db_session):
     row = next(r for r in client.get("/api/staff/leads").json() if r["id"] == lead)
     assert row["accepted_kw"] == "2"
     assert client.get(f"/api/staff/leads/{lead}").json()["accepted_kw"] == "2"
+
+
+def test_a_size_that_no_longer_fits_cannot_be_accepted(client, lead):
+    """§8: an option above the verified roof or load is never offered, so a quote made before
+    staff re-checked the roof smaller can't be accepted at a size that no longer fits."""
+    verify(client, lead)  # 450 sq ft, 5 kW: quote offers 2/3/4 kW
+    quote_id = send(client, lead).json()["id"]
+    verify(client, lead, roof="250", load="5")  # re-checked: the roof now holds 2 kW
+    sign_in(client, OWNER)
+    stale = client.post(f"/api/quotes/{quote_id}/accept", headers=CSRF, json={"selected_kw": "4"})
+    assert (stale.status_code, stale.json()["error"]["code"]) == (409, "QUOTE_OUTDATED")
+    ok = client.post(f"/api/quotes/{quote_id}/accept", headers=CSRF, json={"selected_kw": "2"})
+    assert ok.status_code == 200, ok.text
+
+
+def test_a_rate_override_cannot_push_savings_past_the_bill(client, lead):
+    """§10: the estimate never exceeds the variable part of the current bill."""
+    verify(client, lead)
+    sign_in(client, DESK)
+    # Within the schema bound, but ≈ 11× the natural ₹8.97 per unit: more than the whole bill.
+    huge = [{"field": "savings_rate", "value": "100", "reason": "Typo check"}]
+    res = client.post(
+        f"/api/staff/leads/{lead}/quote-preview", headers=CSRF, json={"overrides": huge}
+    )
+    assert res.status_code == 422, res.text
+    assert res.json()["error"]["code"] == "INVALID_INPUT"
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("savings_rate", "1e30"),
+        ("savings_rate", "1e100000"),
+        ("savings_rate", "1e-100000"),
+        ("fixed_charge_monthly", "1e100000"),
+        ("usable_generation_pct", "0.123456789"),
+    ],
+)
+def test_absurd_override_values_are_refused_cleanly(client, lead, field, value):
+    """Break test: these gave a 500, two seconds of CPU or a 500 KB response."""
+    verify(client, lead)
+    sign_in(client, DESK)
+    body = {"overrides": [{"field": field, "value": value}]}
+    res = client.post(f"/api/staff/leads/{lead}/quote-preview", headers=CSRF, json=body)
+    assert res.status_code == 422, res.text[:300]

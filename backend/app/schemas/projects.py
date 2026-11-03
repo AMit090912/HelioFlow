@@ -18,7 +18,8 @@ StageName = Literal[
 
 
 class AdvanceIn(BaseModel):
-    amount: Decimal = Field(gt=0, le=10_000_000)
+    # Paise at most (the column is Numeric(12,2): anything finer was silently rounded), ₹1 minimum.
+    amount: Decimal = Field(ge=1, le=10_000_000, decimal_places=2)
 
 
 class StageIn(BaseModel):

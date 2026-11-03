@@ -60,7 +60,16 @@ def _clean_phone(raw: str | None) -> str | None:
 
 
 @router.post("/signup", status_code=201, response_model=UserOut)
-def signup(body: SignupIn, response: Response, db: Session = Depends(get_db)) -> UserOut:
+def signup(
+    body: SignupIn, request: Request, response: Response, db: Session = Depends(get_db)
+) -> UserOut:
+    limiter: SlidingWindowLimiter = request.app.state.signup_limiter
+    total: SlidingWindowLimiter = request.app.state.signup_total_limiter
+    ip = client_ip(request)
+    if limiter.is_blocked(ip) or total.is_blocked("all"):
+        raise ApiError(429, "RATE_LIMITED", "Too many sign-ups from here. Try again later.")
+    limiter.record(ip)
+    total.record("all")
     full_name = clean_full_name(body.full_name)
     if full_name is None:
         raise ApiError(422, "NAME_INVALID", "Enter your name using letters only.")
@@ -114,14 +123,16 @@ def login(
     limiter: SlidingWindowLimiter = request.app.state.login_limiter
     # Per caller and account: an attacker failing logins cannot lock the real user out.
     key = f"{client_ip(request)}|{identifier}"
-    if limiter.is_blocked(key):
-        raise ApiError(429, "RATE_LIMITED", "Too many attempts. Try again in a minute.")
+    account: SlidingWindowLimiter = request.app.state.account_limiter
+    if limiter.is_blocked(key) or account.is_blocked(identifier):
+        raise ApiError(429, "RATE_LIMITED", "Too many attempts. Try again in a few minutes.")
 
     column = User.phone if phone else User.email
     user = db.execute(select(User).where(column == identifier)).scalar_one_or_none()
     password_ok = verify_password(body.password, user.password_hash if user else _DUMMY_HASH)
     if user is None or not password_ok or not user.is_active:
         limiter.record(key)
+        account.record(identifier)
         raise ApiError(401, "INVALID_CREDENTIALS", "Those details don't match an account.")
 
     limiter.reset(key)

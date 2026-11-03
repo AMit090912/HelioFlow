@@ -59,8 +59,12 @@ def create_lead(
         db.add(lead)
         try:
             db.commit()
-        except IntegrityError:
+        except IntegrityError as exc:
             db.rollback()
+            # Only a clash of the random lead code is worth another try; anything else is a bug.
+            diag = getattr(exc.orig, "diag", None)
+            if getattr(diag, "constraint_name", None) != "uq_leads_code":
+                raise
             continue
         return LeadMine.of(lead, None)
     raise ApiError(500, "INTERNAL_ERROR", "Could not create the lead. Try again.")

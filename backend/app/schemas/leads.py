@@ -3,7 +3,7 @@ from datetime import datetime
 from decimal import Decimal
 from typing import Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field, field_serializer
+from pydantic import BaseModel, ConfigDict, Field, StrictBool, field_serializer
 
 from app.models import BillReading, Lead, Quote
 from app.schemas.bills import plain
@@ -19,15 +19,15 @@ class LeadDetails(BaseModel):
     ownership: Literal["owner", "tenant"]
     property_type: Literal["home", "business"]
     roof_type: Literal["rcc_flat", "metal_sheet", "tiled", "other"]
-    roof_area_sqft: Decimal = Field(gt=0, le=100_000)
-    monthly_bill: Decimal = Field(gt=0, le=1_000_000)
+    roof_area_sqft: Decimal = Field(gt=0, le=100_000, decimal_places=2)
+    monthly_bill: Decimal = Field(gt=0, le=1_000_000, decimal_places=2)
     pincode: str = Field(pattern=r"^[1-9][0-9]{5}$")
 
 
 class LeadIn(LeadDetails):
     """Step 1 + the consent from step 2 (ARCHITECTURE §2, §14)."""
 
-    consent: bool
+    consent: StrictBool  # only a real true counts as agreeing ("yes" is not consent)
 
 
 class ReadingRef(BaseModel):

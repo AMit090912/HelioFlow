@@ -144,7 +144,10 @@ def monthly_figures(e: BillExtraction) -> MonthlyFigures:
     days = _billing_days(e)
     fixed = _per_month(e.fixed_charge.value, days)
 
-    history = e.monthly_units.value or []
+    # A month outside the plausible range is a misreading: it is flagged (sanity_flags) and left
+    # out here, so one bad digit can't distort the suggestion. At most the latest 24 months count.
+    lo, hi = UNITS_RANGE
+    history = [m for m in (e.monthly_units.value or []) if lo <= m.units <= hi][-24:]
     if len(history) >= 3:
         mean = Decimal(sum(m.units for m in history)) / len(history)
         units = mean.quantize(CENT, rounding=ROUND_HALF_UP)

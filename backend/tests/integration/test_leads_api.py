@@ -84,6 +84,9 @@ def test_homeowner_creates_a_lead(client, ai):
         ({"pincode": "04001"}, "pincode"),
         ({"monthly_bill": "0"}, "monthly_bill"),
         ({"roof_area_sqft": "-5"}, "roof_area_sqft"),
+        # Break test: finer than the column keeps gave a 500 after five retries.
+        ({"roof_area_sqft": "0.001"}, "roof_area_sqft"),
+        ({"monthly_bill": "0.004"}, "monthly_bill"),
         ({"ownership": "landlord"}, "ownership"),
     ],
 )
@@ -295,3 +298,15 @@ def test_cannot_edit_someone_elses_lead(client, ai):
     lead = create_lead(client)
     signup(client, "second@example.com")
     assert client.patch(f"/api/leads/{lead['id']}", headers=CSRF, json=HOME).status_code == 404
+
+
+def test_a_lead_code_clash_is_retried(client, ai, monkeypatch):
+    """Lead codes are random; a clash with an existing code gets a new code, not an error."""
+    import app.api.leads as leads_api
+
+    signup(client, "clash@example.com")
+    first = create_lead(client)
+    codes = iter([first["code"], "LD-999999"])
+    monkeypatch.setattr(leads_api, "_new_code", lambda: next(codes))
+    second = create_lead(client)
+    assert second["code"] == "LD-999999"

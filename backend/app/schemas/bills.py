@@ -15,13 +15,16 @@ class ConfirmIn(BaseModel):
 
     consumer_number: str | None = Field(default=None, max_length=30, pattern=r"^[0-9 \-]*$")
     tariff_category: str | None = Field(default=None, max_length=60)
-    sanctioned_load_kw: Decimal | None = Field(default=None, gt=0, le=100)
+    # Two decimals at most: the columns keep two, and scoring must use what is saved.
+    sanctioned_load_kw: Decimal | None = Field(
+        default=None, ge=Decimal("0.1"), le=100, decimal_places=2
+    )
     monthly_units: list[Annotated[int, Field(ge=0, le=5000)]] | None = Field(
         default=None, max_length=24
     )
-    avg_monthly_units: Decimal = Field(ge=0, le=5000)
-    bill_amount: Decimal = Field(gt=0, le=1_000_000)
-    fixed_charge_monthly: Decimal | None = Field(default=None, ge=0, le=100_000)
+    avg_monthly_units: Decimal = Field(ge=0, le=5000, decimal_places=2)
+    bill_amount: Decimal = Field(gt=0, le=1_000_000, decimal_places=2)
+    fixed_charge_monthly: Decimal | None = Field(default=None, ge=0, le=100_000, decimal_places=2)
 
 
 def plain(value: Decimal | None) -> str | None:

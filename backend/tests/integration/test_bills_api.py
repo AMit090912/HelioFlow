@@ -248,6 +248,10 @@ def test_confirm_records_what_the_person_changed(client, owner, db_session):
         {"avg_monthly_units": "340", "bill_amount": "0"},
         {"avg_monthly_units": "340", "bill_amount": "3200", "sanctioned_load_kw": "500"},
         {"bill_amount": "3200"},
+        # Finer than the columns keep: would be scored on 0.004, then saved as 0 (break test).
+        {"avg_monthly_units": "0.004", "bill_amount": "3200"},
+        {"avg_monthly_units": "340", "bill_amount": "0.001"},
+        {"avg_monthly_units": "340", "bill_amount": "3200", "sanctioned_load_kw": "0.05"},
     ],
 )
 def test_confirm_validates_values(client, owner, bad):
@@ -467,12 +471,20 @@ def test_preview_is_private_png(client, owner):
     assert client.get(f"/api/bills/{reading_id}/preview").status_code == 401
 
 
-def test_upload_is_rate_limited(client, owner):
+def test_rejected_files_do_not_use_up_real_uploads(client, owner):
+    """Break test: ten refused files used to lock the person out of uploading for an hour."""
     _, lead = owner
     for i in range(10):
         upload(client, lead, f"x{i}.jpg", content=b"not-an-image")
+    assert upload(client, lead, "clear.jpg").status_code in (200, 202)
+
+
+def test_upload_attempts_are_rate_limited(client, owner):
+    _, lead = owner
+    for i in range(30):
+        upload(client, lead, f"x{i}.jpg", content=b"not-an-image")
     res = upload(client, lead, "clear.jpg")
-    assert (res.status_code, res.json()["error"]["code"]) == (429, "RATE_LIMITED")
+    assert (res.status_code, res.json()["error"]["code"]) == (429, "UPLOAD_LIMIT")
 
 
 def test_multi_month_bill_is_confirmed_per_month(client, db_session, ai):

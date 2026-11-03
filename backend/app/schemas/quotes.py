@@ -16,7 +16,9 @@ class OverrideIn(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
     field: OverrideField
-    value: Decimal
+    # Bounded so a typo can't produce a 500 or a huge response: no field needs more than
+    # ₹1,00,000 or four decimals (a rate like ₹8.9706 per unit, a share like 0.9).
+    value: Decimal = Field(ge=0, le=100_000, decimal_places=4)
     reason: str | None = Field(default=None, max_length=500)
 
 

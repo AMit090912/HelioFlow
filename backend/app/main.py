@@ -51,6 +51,22 @@ _UPLOAD_PATH = re.compile(r"^/api/leads/[^/]+/bills$")
 _MULTIPART_OVERHEAD = 256 * 1024
 
 
+_MAX_JSON_BYTES = 1024 * 1024
+_PROBE_PATH = "/api/dev/upload-probe"
+
+
+def _oversized_body(request: Request):
+    """Any other API request body over 1 MB is refused before it is read: no form needs more."""
+    path = request.url.path
+    # Uploads have their own, larger limit; the dev-only probe measures large bodies (Q-9).
+    if request.method not in UNSAFE_METHODS or _UPLOAD_PATH.match(path) or path == _PROBE_PATH:
+        return None
+    length = request.headers.get("content-length")
+    if length is not None and (not length.isdigit() or int(length) > _MAX_JSON_BYTES):
+        return error_response(413, "BODY_TOO_LARGE", "This request is too large.")
+    return None
+
+
 def _oversized_upload(request: Request, max_mb: int):
     """Refuse an oversized bill upload from its Content-Length, before the multipart parser
     receives (and spools) the whole body (§5.1)."""
@@ -74,9 +90,26 @@ SECURITY_HEADERS = {
 def create_app() -> FastAPI:
     settings = get_settings()
     redaction.install()
-    app = FastAPI(title="HelioFlow API", version="0.1.0")
+    # Interactive API docs are for development; production doesn't advertise its surface.
+    docs = settings.env != "production"
+    app = FastAPI(
+        title="HelioFlow API",
+        version="0.1.0",
+        docs_url="/docs" if docs else None,
+        redoc_url="/redoc" if docs else None,
+        openapi_url="/openapi.json" if docs else None,
+    )
     app.state.login_limiter = SlidingWindowLimiter(limit=5, window_seconds=60)
+    # Sign-ups per client: each costs an argon2 hash and says whether an identity exists.
+    app.state.signup_limiter = SlidingWindowLimiter(limit=10, window_seconds=3600)
+    # Backstops that don't trust the client's IP, which a direct caller can fake through
+    # X-Forwarded-For: failed sign-ins per account, and sign-ups across all clients.
+    app.state.account_limiter = SlidingWindowLimiter(limit=20, window_seconds=900)
+    app.state.signup_total_limiter = SlidingWindowLimiter(limit=200, window_seconds=3600)
+    # Bills per homeowner per hour: 10 accepted uploads (each may cost AI calls), and 30 attempts
+    # of any kind, so a few refused files don't use up someone's real uploads.
     app.state.upload_limiter = SlidingWindowLimiter(limit=10, window_seconds=3600)
+    app.state.upload_attempt_limiter = SlidingWindowLimiter(limit=30, window_seconds=3600)
     app.state.status_limiter = SlidingWindowLimiter(limit=30, window_seconds=60)  # §4
     app.state.demo_limiter = SlidingWindowLimiter(limit=30, window_seconds=3600)
     # Background bill reading gets its own session and provider chain; tests swap both.
@@ -94,6 +127,8 @@ def create_app() -> FastAPI:
         ):
             response = error_response(403, "CSRF_HEADER_MISSING", "Missing request header.")
         elif (too_big := _oversized_upload(request, settings.max_upload_mb)) is not None:
+            response = too_big
+        elif (too_big := _oversized_body(request)) is not None:
             response = too_big
         else:
             response = await call_next(request)

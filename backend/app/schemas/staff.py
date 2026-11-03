@@ -11,9 +11,9 @@ from app.schemas.bills import ReadingOut, plain
 class VerificationIn(BaseModel):
     model_config = ConfigDict(extra="ignore")
 
-    roof_area_sqft: Decimal = Field(gt=0, le=100_000)
+    roof_area_sqft: Decimal = Field(gt=0, le=100_000, decimal_places=2)
     via: Literal["survey", "call"]
-    sanctioned_load_kw: Decimal | None = Field(default=None, gt=0, le=100)
+    sanctioned_load_kw: Decimal | None = Field(default=None, gt=0, le=100, decimal_places=2)
     notes: str | None = Field(default=None, max_length=2000)
 
 

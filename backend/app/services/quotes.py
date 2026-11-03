@@ -23,6 +23,7 @@ from app.services import notify
 from app.services.calc.engine import OptionQuote, QuoteInputs, QuoteOptions, build_quote_options
 from app.services.calc.errors import CalcError
 from app.services.calc.savings import Overrides, estimate_savings
+from app.services.calc.sizing import kw_by_roof
 from app.services.calc.types import PriceRule, Settings, SubsidyRule
 from app.services.lead_actions import effective_sanctioned_load, lock_lead, log_event
 from app.services.rules_repo import load_price_rules, load_settings, load_subsidy_rules
@@ -318,6 +319,20 @@ def send_quote(db: Session, lead_id: uuid.UUID, actor: User, overrides: list[Ove
     return quote
 
 
+def _check_still_fits(db: Session, lead: Lead, kw: Decimal) -> None:
+    """§8: a size above the verified roof or sanctioned load is never offered. Staff may re-check
+    the roof after quoting; a size that no longer fits is refused until a revised quote is sent."""
+    roof = lead.verified_roof_area_sqft
+    roof_kw = kw_by_roof(roof, load_settings(db)) if roof is not None else None
+    load, _ = effective_sanctioned_load(db, lead)
+    if roof_kw is None or kw > roof_kw or (load is not None and kw > load):
+        raise ApiError(
+            409,
+            "QUOTE_OUTDATED",
+            "Our roof check changed after this quote. We'll send you a revised quote.",
+        )
+
+
 def accept_quote(db: Session, quote_id: uuid.UUID, homeowner: User, selected_kw: Decimal) -> Quote:
     quote = db.get(Quote, quote_id)
     if quote is None:
@@ -335,6 +350,7 @@ def accept_quote(db: Session, quote_id: uuid.UUID, homeowner: User, selected_kw:
         raise ApiError(422, "OPTION_NOT_OFFERED", "Choose one of the sizes in this quote.")
     if lead.status != LeadStatus.quoted:
         raise ApiError(409, "LEAD_STATUS_CONFLICT", "This quote can no longer be accepted.")
+    _check_still_fits(db, lead, selected_kw)
     quote.status = QuoteStatus.accepted
     quote.selected_kw = selected_kw
     quote.accepted_at = datetime.now(UTC)

@@ -195,3 +195,67 @@ def test_real_names_in_any_script_are_accepted(client: TestClient):
         res = signup(client, full_name=f"  {name}  ", email=f"ok{i}@example.com")
         assert res.status_code == 201, (name, res.text)
         assert res.json()["full_name"] == name
+
+
+def test_non_latin_digits_are_not_a_phone_number(client: TestClient):
+    """Break test: Arabic-Indic and full-width digits passed the check, then the database refused
+    them and the person was told the account already exists."""
+    for phone in ["9123٤٥٦٧٨٩", "9123４５６７８９"]:
+        res = signup(client, phone=phone)
+        assert res.status_code == 422, res.text
+        assert res.json()["error"]["code"] != "ACCOUNT_EXISTS"
+
+
+def test_signups_are_rate_limited_per_client(client: TestClient):
+    """Each sign-up costs an argon2 hash and reveals whether an identity exists: limit per IP."""
+    codes = [signup(client, email=f"burst{i}@example.com").status_code for i in range(12)]
+    assert codes[:10] == [201] * 10
+    assert codes[10:] == [429, 429]
+
+
+def test_large_json_bodies_are_refused(client: TestClient):
+    body = '{"full_name": "' + "a" * (2 * 1024 * 1024) + '"}'
+    res = client.post(
+        "/api/auth/signup", content=body, headers={**CSRF, "Content-Type": "application/json"}
+    )
+    assert res.status_code == 413
+    assert res.json()["error"]["code"] == "BODY_TOO_LARGE"
+
+
+def test_api_docs_are_hidden_in_production(monkeypatch):
+    from app.core.config import get_settings
+    from app.main import create_app
+
+    monkeypatch.setenv("ENV", "production")
+    monkeypatch.setenv("JWT_SECRET", "x" * 40)
+    get_settings.cache_clear()
+    try:
+        with TestClient(create_app()) as c:
+            assert c.get("/docs").status_code == 404
+            assert c.get("/openapi.json").status_code == 404
+    finally:
+        get_settings.cache_clear()
+
+
+def test_spoofed_ips_cannot_brute_force_one_account(client: TestClient, monkeypatch):
+    """Break test: a new X-Forwarded-For on every try dodged the per-client limit. The account
+    itself stops accepting attempts after 20 failures in 15 minutes, whatever the IP."""
+    from app.core.config import get_settings
+
+    monkeypatch.setenv("TRUST_PROXY_HEADERS", "true")
+    get_settings.cache_clear()
+    try:
+        signup(client, email="target@example.com")
+        client.cookies.clear()
+        body = {"identifier": "target@example.com", "password": "wrong-password-x"}
+        codes = [
+            client.post(
+                "/api/auth/login", json=body, headers={**CSRF, "X-Forwarded-For": f"10.0.0.{i}"}
+            ).status_code
+            for i in range(22)
+        ]
+        assert codes[:20] == [401] * 20
+        assert codes[20:] == [429, 429]
+    finally:
+        monkeypatch.delenv("TRUST_PROXY_HEADERS")
+        get_settings.cache_clear()

@@ -4,7 +4,7 @@ the public status link (only the token's SHA-256 is stored). Callers commit."""
 import hashlib
 import secrets
 import uuid
-from datetime import UTC, date, datetime
+from datetime import UTC, date, datetime, timedelta
 from decimal import Decimal
 from typing import Any
 
@@ -126,6 +126,8 @@ def move_stage(
             raise ApiError(422, "VALIDATION_ERROR", "A date only goes with scheduling.")
         if scheduled_for < today_in_india():
             raise ApiError(422, "DATE_IN_PAST", "The installation date can't be in the past.")
+        if scheduled_for > today_in_india() + timedelta(days=730):
+            raise ApiError(422, "DATE_TOO_FAR", "Pick an installation date within two years.")
     db.add(
         ProjectEvent(
             project_id=project.id,
@@ -153,6 +155,8 @@ def regenerate_link(db: Session, project_id: uuid.UUID, actor: User) -> str:
 
 def revoke_link(db: Session, project_id: uuid.UUID, actor: User) -> None:
     project = _lock_project(db, project_id)
+    if project.status_token_revoked_at is not None:
+        return  # already off: keep the first revocation time and log it once
     project.status_token_revoked_at = datetime.now(UTC)
     log_event(db, db.get(Lead, project.lead_id), actor, "link_revoked")
 

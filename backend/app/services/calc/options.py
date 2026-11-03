@@ -32,8 +32,12 @@ def quote_options(
     if sanctioned_load_kw is None:
         raise CalcError("SANCTIONED_LOAD_UNKNOWN", "Enter the sanctioned load before quoting.")
     roof_kw = kw_by_roof(verified_roof_sqft, settings)
-    if recommended_kw is None or roof_kw is None:
+    if roof_kw is None:
         raise CalcError("NO_OPTION_FITS", "No system fits the verified roof.")
+    if recommended_kw is None:  # usage is zero or unknown: nothing to size against
+        raise CalcError(
+            "NO_RECOMMENDATION", "There's no size to recommend: the confirmed bill shows no usage."
+        )
 
     # Offsets are steps through the configured option list (A-10), so "one either side" means
     # the neighbouring sizes even when options are 1, 2, 3, 5, 7… or in 0.5 kW steps.

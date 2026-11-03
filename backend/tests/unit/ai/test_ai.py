@@ -342,3 +342,17 @@ def test_average_unknown_when_nothing_was_read():
         current_units={"value": None, "confidence": 0},
     )
     assert suggested_average_units(e) == (None, None)
+
+
+def test_an_impossible_month_is_left_out_of_the_average():
+    """A misread history month (34,000 units) must not drag the suggestion to 8,747 units, and is
+    still flagged so the person checks the bill."""
+    months = [(7, 340), (8, 320), (9, 34000), (10, 330)]
+    e = extraction(
+        monthly_units={
+            "value": [{"month": f"2026-{m:02d}", "units": u} for m, u in months],
+            "confidence": 0.9,
+        }
+    )
+    assert suggested_average_units(e) == (D("330.00"), "history_mean")
+    assert "out_of_range" in sanity_flags(e, declared_bill=None)["monthly_units"]

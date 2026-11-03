@@ -99,6 +99,14 @@ def estimate_savings(
     if rate <= 0:
         return unavailable("savings_rate_not_positive", usable, rate)
     annual = rupees(usable * rate)
+    # §10: the estimate can never exceed the variable part of the current bill. The natural rate
+    # can't (usable is capped at consumption); an override could, so it is rejected, not trimmed.
+    if overrides.savings_rate is not None and annual > rupees((monthly_bill - fixed) * 12):
+        raise CalcError(
+            "INVALID_INPUT",
+            "That saving per unit would save more than the whole bill.",
+            fields=["savings_rate"],
+        )
     if annual <= 0:
         return unavailable("savings_not_positive", usable, rate)
     return Savings(whole(generation), usable, pct, fixed, source, rate, annual, "ok", None)

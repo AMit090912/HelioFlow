@@ -104,3 +104,10 @@ def test_quote_needs_sanctioned_load(settings):
     with pytest.raises(CalcError) as err:
         options(settings, D("3"), D("450"), None)
     assert err.value.code == "SANCTIONED_LOAD_UNKNOWN"
+
+
+def test_no_usage_says_so_rather_than_blaming_the_roof(settings):
+    """Break test: 0 units on a big roof said "No system fits the verified roof"."""
+    with pytest.raises(CalcError) as err:
+        options(settings, None, D("5000"), D("20"))
+    assert err.value.code == "NO_RECOMMENDATION"

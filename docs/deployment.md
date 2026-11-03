@@ -208,10 +208,22 @@ Open the Vercel URL on a phone and check, in order:
   request bodies (Q-9).
 - **Rate limits are per process.** Sign-in, sign-up and status-link limits are kept in memory.
   That's fine for one Render instance; several instances would need a shared store, e.g. Redis.
-- **Proxy trust.** With `TRUST_PROXY_HEADERS=true`, rate limits use the first `X-Forwarded-For`
-  hop. Vercel sets that header, but a caller who goes to the Render URL directly can set their
-  own. A production setup would only accept traffic from the frontend, through a private network
-  or a shared secret header.
+- **Proxy trust.** With `TRUST_PROXY_HEADERS=true`, per-client limits use the first
+  `X-Forwarded-For` hop. Vercel sets that header, but a caller who goes to the Render URL directly
+  can set their own. Backstops that ignore the IP limit what that buys an attacker:
+  - after 20 failed sign-ins in 15 minutes, an account stops accepting attempts for a while;
+  - sign-ups are capped at 200 an hour in total.
+
+  A production setup would accept API traffic only from the frontend, through a private network
+  or a shared secret.
+- **Sign-out is per browser.** Sessions are signed cookies (8 hours). Signing out deletes the
+  cookie, but a copy taken before sign-out stays valid until it expires. Revoking sessions on the
+  server would need a session table or a token version per user.
+- **A quote whose cost after subsidy is ₹0** (only possible with an unusually low price rule)
+  can be accepted but not converted, because an advance must be at least ₹1 and no more than
+  that cost. Don't set price rules below the subsidy.
+- **Bill upload limits.** A homeowner can upload 10 accepted bills and make 30 attempts an hour.
+  Past that they are asked to try again in an hour.
 - **Messages and payments are simulated.** WhatsApp messages are stored and shown as
   "Simulated, not sent". The advance gets a `SIMULATED-` reference, and no money moves.
 - **Hosting logs.** Status-link tokens are redacted from the app's own logs (`/s/****`). Render
