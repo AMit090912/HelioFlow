@@ -10,6 +10,8 @@ from fastapi.exceptions import RequestValidationError
 from fastapi.responses import JSONResponse
 from starlette.exceptions import HTTPException as StarletteHTTPException
 
+from app.core.logging import redact
+
 STATUS_CODES = {
     400: "BAD_REQUEST",
     401: "NOT_AUTHENTICATED",
@@ -88,7 +90,7 @@ def install_error_handlers(app: FastAPI) -> None:
             "unhandled %s on %s %s",
             type(exc).__name__,
             request.method,
-            request.url.path,
+            redact(request.url.path),
             exc_info=exc,
         )
         return error_response(500, "INTERNAL_ERROR", "Something went wrong.")

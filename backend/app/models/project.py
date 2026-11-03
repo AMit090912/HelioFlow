@@ -1,8 +1,8 @@
 import uuid
-from datetime import datetime
+from datetime import date, datetime
 from decimal import Decimal
 
-from sqlalchemy import CHAR, DateTime, ForeignKey, Index, Numeric, Text, func
+from sqlalchemy import CHAR, Date, DateTime, ForeignKey, Index, Numeric, Text, func
 from sqlalchemy.dialects.postgresql import UUID
 from sqlalchemy.orm import Mapped, mapped_column
 
@@ -51,3 +51,5 @@ class ProjectEvent(IdMixin, Base):
     to_stage: Mapped[ProjectStage] = mapped_column(STAGE_ENUM, nullable=False)
     actor_id: Mapped[uuid.UUID | None] = mapped_column(UUID(as_uuid=True), ForeignKey("users.id"))
     note: Mapped[str | None] = mapped_column(Text)
+    # Set on the move to "installation scheduled" when a date is agreed (§12).
+    scheduled_for: Mapped[date | None] = mapped_column(Date)

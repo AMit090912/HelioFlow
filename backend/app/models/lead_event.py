@@ -7,7 +7,16 @@ from sqlalchemy.orm import Mapped, mapped_column
 from app.models.base import Base, IdMixin, pg_enum
 from app.models.enums import LeadStatus
 
-EVENT_KINDS = ("verified", "upgraded", "closed", "quote_sent", "quote_accepted")
+EVENT_KINDS = (
+    "verified",
+    "upgraded",
+    "closed",
+    "quote_sent",
+    "quote_accepted",
+    "converted",
+    "link_regenerated",
+    "link_revoked",
+)
 
 
 class LeadEvent(IdMixin, Base):
@@ -16,8 +25,10 @@ class LeadEvent(IdMixin, Base):
     __tablename__ = "lead_events"
     __table_args__ = (
         CheckConstraint(
-            "kind IN ('verified','upgraded','closed','quote_sent','quote_accepted')",
-            name="kind",
+            "kind IN ('verified','upgraded','closed','quote_sent','quote_accepted',"
+            "'converted','link_regenerated','link_revoked')",
+            # Migrations named it "ck_lead_events_kind", which the naming convention prefixed again.
+            name="ck_lead_events_kind",
         ),
     )
 

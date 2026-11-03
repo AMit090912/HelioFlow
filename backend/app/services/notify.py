@@ -58,3 +58,84 @@ def quote_sent(db: Session, lead: Lead, quote: Quote) -> Notification:
     )
     db.add(note)
     return note
+
+
+STAGE_NAMES = {
+    "en": {
+        "advance_received": "Advance received",
+        "installation_scheduled": "Installation scheduled",
+        "installation_completed": "Installation completed",
+        "net_metering_completed": "Net metering completed",
+        "subsidy_applied": "Subsidy application submitted",
+        "subsidy_credited": "Subsidy credited",
+    },
+    "hi": {
+        "advance_received": "अग्रिम राशि मिली",
+        "installation_scheduled": "इंस्टॉलेशन तय हुआ",
+        "installation_completed": "इंस्टॉलेशन पूरा हुआ",
+        "net_metering_completed": "नेट मीटरिंग पूरी हुई",
+        "subsidy_applied": "सब्सिडी आवेदन जमा हुआ",
+        "subsidy_credited": "सब्सिडी खाते में आई",
+    },
+    "mr": {
+        "advance_received": "आगाऊ रक्कम मिळाली",
+        "installation_scheduled": "इन्स्टॉलेशन ठरले",
+        "installation_completed": "इन्स्टॉलेशन पूर्ण झाले",
+        "net_metering_completed": "नेट मीटरिंग पूर्ण झाले",
+        "subsidy_applied": "अनुदान अर्ज सादर केला",
+        "subsidy_credited": "अनुदान खात्यात जमा झाले",
+    },
+}
+
+PROJECT_CREATED = {
+    "en": "HelioFlow: we've received your advance for {code}. "
+    "Follow your installation here: {link}",
+    "hi": "HelioFlow: {code} के लिए आपकी अग्रिम राशि मिल गई है। अपने इंस्टॉलेशन की स्थिति यहाँ देखें: {link}",
+    "mr": "HelioFlow: {code} साठी तुमची आगाऊ रक्कम मिळाली. तुमच्या इन्स्टॉलेशनची स्थिती इथे पाहा: {link}",
+}
+
+STAGE_CHANGED = {
+    "en": 'HelioFlow: {code} has moved to "{stage}".',
+    "hi": 'HelioFlow: {code} अब "{stage}" चरण पर है।',
+    "mr": 'HelioFlow: {code} आता "{stage}" टप्प्यावर आहे.',
+}
+
+INSTALL_DATE = {
+    "en": " Installation date: {date}.",
+    "hi": " इंस्टॉलेशन की तारीख: {date}।",
+    "mr": " इन्स्टॉलेशनची तारीख: {date}.",
+}
+
+
+def _outbox(db: Session, lead: Lead, project_id, kind: NotificationType, message: str) -> None:
+    owner = db.get(User, lead.homeowner_id)
+    channel, recipient = mask_recipient(owner)
+    db.add(
+        Notification(
+            lead_id=lead.id,
+            project_id=project_id,
+            type=kind,
+            channel=channel,
+            locale=owner.preferred_locale,
+            recipient_masked=recipient,
+            message=message,
+        )
+    )
+
+
+def project_created(db: Session, lead: Lead, project_id, frontend_origin: str) -> None:
+    """The status link goes out with the project. The outbox is a table every staff member can
+    read, so the stored text never contains the live token (decision D-1): staff copy the link
+    once from the project panel."""
+    locale = db.get(User, lead.homeowner_id).preferred_locale.value
+    link = f"{frontend_origin.rstrip('/')}/{locale}/s/••••"
+    message = PROJECT_CREATED[locale].format(code=lead.code, link=link)
+    _outbox(db, lead, project_id, NotificationType.status_link, message)
+
+
+def stage_changed(db: Session, lead: Lead, project_id, stage: str, scheduled_for=None) -> None:
+    locale = db.get(User, lead.homeowner_id).preferred_locale.value
+    message = STAGE_CHANGED[locale].format(code=lead.code, stage=STAGE_NAMES[locale][stage])
+    if scheduled_for is not None:
+        message += INSTALL_DATE[locale].format(date=scheduled_for.strftime("%d-%m-%Y"))
+    _outbox(db, lead, project_id, NotificationType.stage_changed, message)

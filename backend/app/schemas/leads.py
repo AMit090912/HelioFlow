@@ -1,7 +1,7 @@
 import uuid
 from datetime import datetime
 from decimal import Decimal
-from typing import Literal
+from typing import Any, Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
@@ -54,6 +54,7 @@ class LeadMine(BaseModel):
     current_reading: ReadingRef | None
     latest_reading: ReadingRef | None
     current_quote: QuoteRef | None = None
+    project: dict[str, Any] | None = None  # {stage, stages[{stage, done_at}], scheduled_for}
     created_at: datetime
 
     @field_serializer("roof_area_sqft", "declared_monthly_bill", "recommended_kw")

@@ -4,7 +4,8 @@ import re
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, bills, dev, health, leads, quotes, rules, staff
+from app.api import auth, bills, dev, health, leads, projects, public, quotes, rules, staff
+from app.core import logging as redaction
 from app.core.config import Settings, get_settings
 from app.core.db import SessionLocal
 from app.core.errors import error_response, install_error_handlers
@@ -70,9 +71,11 @@ SECURITY_HEADERS = {
 
 def create_app() -> FastAPI:
     settings = get_settings()
+    redaction.install()
     app = FastAPI(title="HelioFlow API", version="0.1.0")
     app.state.login_limiter = SlidingWindowLimiter(limit=5, window_seconds=60)
     app.state.upload_limiter = SlidingWindowLimiter(limit=10, window_seconds=3600)
+    app.state.status_limiter = SlidingWindowLimiter(limit=30, window_seconds=60)  # §4
     # Background bill reading gets its own session and provider chain; tests swap both.
     app.state.session_factory = SessionLocal
     app.state.ai_providers = providers_for(settings)
@@ -91,6 +94,11 @@ def create_app() -> FastAPI:
             response = too_big
         else:
             response = await call_next(request)
+        if request.url.path.startswith("/api/public/"):
+            # Status links are secrets in the URL: never leak them onward or into search (§12).
+            response.headers["Referrer-Policy"] = "no-referrer"
+            response.headers["X-Robots-Tag"] = "noindex, nofollow"
+            response.headers["Cache-Control"] = "no-store"
         for name, value in SECURITY_HEADERS.items():
             response.headers.setdefault(name, value)
         return response
@@ -111,6 +119,8 @@ def create_app() -> FastAPI:
     app.include_router(leads.router, prefix="/api")
     app.include_router(staff.router, prefix="/api")
     app.include_router(quotes.router, prefix="/api")
+    app.include_router(projects.router, prefix="/api")
+    app.include_router(public.router, prefix="/api")
     if settings.env != "production":
         app.include_router(dev.router, prefix="/api")
     return app
