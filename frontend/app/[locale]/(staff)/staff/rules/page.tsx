@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Skeleton } from "@/components/ui/skeleton";
 import { ApiError } from "@/lib/api";
-import { formatNumber, formatRupees, parseDecimalInput } from "@/lib/format";
+import { formatDay, formatNumber, formatRupees, parseDecimalInput } from "@/lib/format";
 import {
   useClosePriceRule,
   useCloseSubsidyRule,
@@ -23,6 +23,7 @@ import {
   type SubsidyRule,
 } from "@/lib/rules";
 import { useSession } from "@/lib/use-session";
+import { cn } from "@/lib/utils";
 
 const SETTING_LABEL: Record<string, { label: string; hint: string; id: string }> = {
   generation_kwh_per_kw_year: { label: "Generation per kW per year (kWh)", hint: "Client figure", id: "CLIENT" },
@@ -38,7 +39,6 @@ function errText(err: unknown) {
   return err instanceof ApiError ? projectError(err.code, err.message) : "Couldn't save. Try again.";
 }
 
-const dateFmt = (d: string | null) => d ?? "open-ended";
 
 export default function RulesPage() {
   const { user } = useSession();
@@ -129,25 +129,34 @@ function PriceRules({ canEdit }: { canEdit: boolean }) {
       {!data ? (
         isError ? <LoadFailed onRetry={() => refetch()} /> : <Skeleton className="h-24 w-full" />
       ) : (
-        <ul className="divide-y divide-border">
+        <ul className="space-y-4">
           {data.map((r) => (
-            <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-              <div>
-                <p className="font-medium text-ink tabular">
-                  {formatRupees(r.price_per_kw, "en")} per kW · {r.min_kw}–{r.max_kw} kW · GST included
-                </p>
-                <p className="text-sm text-ink-2 tabular">
-                  {r.effective_from} → {dateFmt(r.effective_to)}
-                  {r.note ? ` · ${r.note}` : ""}
-                </p>
-              </div>
-              {canEdit ? <EndDate rule={r} onSave={(to) => close.mutateAsync({ id: r.id, effective_to: to })} /> : null}
-            </li>
+            <RuleBlock
+              key={r.id}
+              rule={r}
+              note={r.note}
+              noteLabel="Note"
+              action={canEdit && !r.effective_to ? <EndDate rule={r} onSave={(to) => close.mutateAsync({ id: r.id, effective_to: to })} /> : null}
+            >
+              <p className="font-display text-2xl font-semibold text-ink tabular">
+                {formatRupees(r.price_per_kw, "en")} <span className="text-base font-medium text-ink-2">per kW</span>
+              </p>
+              <dl className="mt-4 grid gap-x-8 gap-y-3 sm:grid-cols-3">
+                <Fact label="System sizes">
+                  {formatNumber(r.min_kw, "en", 2)} to {formatNumber(r.max_kw, "en", 2)} kW
+                </Fact>
+                <Fact label="GST">{r.gst_inclusive ? "Included in the price" : "Added on top"}</Fact>
+                <Fact label="In force">
+                  <InForce rule={r} />
+                </Fact>
+              </dl>
+            </RuleBlock>
           ))}
         </ul>
       )}
       {canEdit ? (
         <form onSubmit={add} className="mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-[repeat(4,minmax(0,1fr))_auto] sm:items-end" noValidate>
+          <h3 className="font-medium text-ink sm:col-span-5">Add a price rule</h3>
           <Labeled label="From kW">
             <Input value={form.min_kw} onChange={(e) => setForm({ ...form, min_kw: e.target.value })} inputMode="decimal" className="h-10" />
           </Labeled>
@@ -176,10 +185,81 @@ function PriceRules({ canEdit }: { canEdit: boolean }) {
   );
 }
 
-function slabText(slabs: Slab[]) {
-  return slabs
-    .map((s) => `${s.from_kw}–${s.to_kw} kW at ${formatRupees(s.amount_per_kw, "en")}/kW`)
-    .join(", ");
+/** "0–2" → "First 2 kW", "2–3" → "Next 1 kW (2 to 3 kW)": how the slabs actually add up. */
+function slabRange(s: Slab) {
+  const from = Number(s.from_kw);
+  const to = Number(s.to_kw);
+  const kw = (n: number) => formatNumber(String(n), "en", 2);
+  return from === 0 ? `First ${kw(to)} kW` : `Next ${kw(to - from)} kW (${kw(from)} to ${kw(to)} kW)`;
+}
+
+/** "CENTRAL_RESIDENTIAL", "residential" → "Central scheme, residential homes". */
+function schemeName(code: string, segment: string) {
+  const scheme = code.split("_")[0].toLowerCase();
+  return `${scheme.charAt(0).toUpperCase()}${scheme.slice(1)} scheme, ${segment} homes`;
+}
+
+type Dated = { effective_from: string; effective_to: string | null };
+
+/** Today in India, as YYYY-MM-DD, to compare with rule dates (the end date is inclusive). */
+function todayInIndia() {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Kolkata" }).format(new Date());
+}
+
+function ruleState(rule: Dated): { label: string; className: string } {
+  const today = todayInIndia();
+  if (rule.effective_from > today) return { label: "Starts later", className: "bg-gold-soft/40 text-ink" };
+  if (rule.effective_to && rule.effective_to < today) return { label: "Ended", className: "bg-surface text-ink-2" };
+  return { label: "In use now", className: "bg-teal-wash text-teal-deep" };
+}
+
+function InForce({ rule }: { rule: Dated }) {
+  return (
+    <>
+      From {formatDay(rule.effective_from, "en")}
+      <span className="block text-ink-2">{rule.effective_to ? `until ${formatDay(rule.effective_to, "en")}` : "No end date set"}</span>
+    </>
+  );
+}
+
+function Fact({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <div>
+      <dt className="text-[0.8125rem] text-ink-2">{label}</dt>
+      <dd className="mt-0.5 text-sm font-medium text-ink tabular">{children}</dd>
+    </div>
+  );
+}
+
+/** One rule: its status, the figures, then the note or source set apart, and the end-date control. */
+function RuleBlock({
+  rule,
+  note,
+  noteLabel,
+  action,
+  children,
+}: {
+  rule: Dated;
+  note: string | null;
+  noteLabel: string;
+  action: ReactNode;
+  children: ReactNode;
+}) {
+  const state = ruleState(rule);
+  const ended = state.label === "Ended";
+  return (
+    <li className={cn("rounded-xl border border-border p-4 sm:p-5", ended && "opacity-70")}>
+      <span className={cn("inline-block rounded-full px-2.5 py-0.5 text-xs font-medium", state.className)}>{state.label}</span>
+      <div className="mt-3">{children}</div>
+      {note ? (
+        <p className="mt-4 max-w-2xl rounded-lg bg-surface px-3 py-2 text-sm text-ink-2">
+          <span className="font-medium text-ink">{noteLabel}: </span>
+          {note}
+        </p>
+      ) : null}
+      {action ? <div className="mt-4 border-t border-border pt-4">{action}</div> : null}
+    </li>
+  );
 }
 
 /** "0-2:30000, 2-3:18000" → slabs. Returns null if a part doesn't parse. */
@@ -233,27 +313,47 @@ function SubsidyRules({ canEdit }: { canEdit: boolean }) {
       {!data ? (
         isError ? <LoadFailed onRetry={() => refetch()} /> : <Skeleton className="h-24 w-full" />
       ) : (
-        <ul className="divide-y divide-border">
+        <ul className="space-y-4">
           {data.map((r: SubsidyRule) => (
-            <li key={r.id} className="flex flex-wrap items-center justify-between gap-3 py-3">
-              <div className="max-w-2xl">
-                <p className="font-medium text-ink">
-                  {r.scheme_code} · {r.segment}
-                </p>
-                <p className="text-sm text-ink tabular">
-                  {slabText(r.slabs)} · cap {formatRupees(r.cap_amount, "en")}
-                </p>
-                <p className="text-sm text-ink-2 tabular">
-                  {r.effective_from} → {dateFmt(r.effective_to)} · {r.source_note}
-                </p>
-              </div>
-              {canEdit ? <EndDate rule={r} onSave={(to) => close.mutateAsync({ id: r.id, effective_to: to })} /> : null}
-            </li>
+            <RuleBlock
+              key={r.id}
+              rule={r}
+              note={r.source_note}
+              noteLabel="Source"
+              action={canEdit && !r.effective_to ? <EndDate rule={r} onSave={(to) => close.mutateAsync({ id: r.id, effective_to: to })} /> : null}
+            >
+              <p className="font-display text-xl font-semibold text-ink">{schemeName(r.scheme_code, r.segment)}</p>
+              <table className="mt-3 w-full max-w-md text-sm tabular">
+                <caption className="sr-only">Subsidy by system size</caption>
+                <tbody className="divide-y divide-border">
+                  {r.slabs.map((s) => (
+                    <tr key={`${s.from_kw}-${s.to_kw}`}>
+                      <th scope="row" className="py-2 pr-4 text-left font-normal text-ink-2">
+                        {slabRange(s)}
+                      </th>
+                      <td className="py-2 text-right font-medium text-ink">{formatRupees(s.amount_per_kw, "en")} per kW</td>
+                    </tr>
+                  ))}
+                  <tr>
+                    <th scope="row" className="py-2 pr-4 text-left font-normal text-ink-2">
+                      Most a home can get
+                    </th>
+                    <td className="py-2 text-right font-semibold text-ink">{formatRupees(r.cap_amount, "en")}</td>
+                  </tr>
+                </tbody>
+              </table>
+              <dl className="mt-4">
+                <Fact label="In force">
+                  <InForce rule={r} />
+                </Fact>
+              </dl>
+            </RuleBlock>
           ))}
         </ul>
       )}
       {canEdit ? (
         <form onSubmit={add} className="mt-4 grid gap-3 border-t border-border pt-4 sm:grid-cols-3" noValidate>
+          <h3 className="font-medium text-ink sm:col-span-3">Add a subsidy rule</h3>
           <div className="sm:col-span-3">
             <Labeled label="Slabs (kW range : ₹ per kW)">
               <Input value={form.slabs} onChange={(e) => setForm({ ...form, slabs: e.target.value })} placeholder="0-2:30000, 2-3:18000" className="h-10" />
