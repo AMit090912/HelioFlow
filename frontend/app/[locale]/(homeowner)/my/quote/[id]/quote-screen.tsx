@@ -42,7 +42,8 @@ function QuoteLoader({ id }: { id: string }) {
   const tc = useTranslations("common");
   const { data: quote, error, refetch } = useQuote(id);
   if (error && !quote) {
-    const code = error instanceof ApiError ? error.code : "UNKNOWN";
+    // A malformed id in the URL (422) is, to the person, the same as a missing one.
+    const code = error instanceof ApiError ? (error.status === 422 ? "NOT_FOUND" : error.code) : "UNKNOWN";
     return (
       <div role="alert" className="mt-6 flex flex-col items-start gap-4">
         <p className="text-ink">{te.has(code) ? te(code) : te("UNKNOWN")}</p>

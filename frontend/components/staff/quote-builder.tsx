@@ -78,12 +78,14 @@ export function QuoteBuilder({ lead }: { lead: StaffLeadDetail }) {
   const [sentNumber, setSentNumber] = useState<string | null>(null);
   const { overrides, invalid } = useMemo(() => toOverrides(draft), [draft]);
   const quotable = QUOTABLE.has(lead.status) && lead.ownership === "owner";
-  const preview = useQuotePreview(lead.id, overrides, quotable);
+  // No preview until the roof is verified: the API would only answer ROOF_NOT_VERIFIED.
+  const roofChecked = lead.roof_verified_at !== null;
+  const preview = useQuotePreview(lead.id, overrides, quotable && roofChecked);
   const send = useSendQuote(lead.id);
 
   const missingReason = overrides.some((o) => (o.reason ?? "").length < 5);
   const hasDraft = Object.values(draft).some((row) => row.value.trim() !== "");
-  const blockCode = preview.error instanceof ApiError ? preview.error.code : null;
+  const blockCode = !roofChecked ? "ROOF_NOT_VERIFIED" : preview.error instanceof ApiError ? preview.error.code : null;
   const data = preview.isError ? null : preview.data;
   const reference = data?.options.find((o) => o.recommended) ?? data?.options[0];
   const openQuote = lead.quotes.find((q) => q.status === "sent");

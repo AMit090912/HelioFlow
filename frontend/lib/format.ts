@@ -59,11 +59,25 @@ export function formatKw(value: string | number | null | undefined, locale: stri
   return n === null ? "—" : `${formatNumber(n, locale, 2)} kW`;
 }
 
-/** Turns what a person typed ("3,200", " 3200 ") into the plain decimal string the API takes. */
+const DEVANAGARI_DIGITS = /[०-९]/g;
+// Thousands separators only: Indian (1,00,000) or Western (100,000) grouping. "3,5" is not a
+// number here: as a decimal comma it would otherwise become 35.
+const GROUPED = /^\d{1,3}(?:(?:,\d{2})*,\d{3}|(?:,\d{3})+)(?:\.\d+)?$/;
+
+/** Turns what a person typed ("3,200", " ३२०० ", "₹1,00,000") into the plain decimal string the
+ *  API takes, or null when it isn't a number. Hindi/Marathi digits are read as digits. */
 export function parseDecimalInput(raw: string): string | null {
-  const cleaned = raw.replace(/[,\s₹]/g, "");
+  const latin = raw.replace(DEVANAGARI_DIGITS, (d) => String(d.charCodeAt(0) - 0x0966));
+  const compact = latin.replace(/[\s₹]/g, "");
+  if (compact.includes(",") && !GROUPED.test(compact)) return null;
+  const cleaned = compact.replace(/,/g, "");
   if (cleaned === "" || !/^\d+(\.\d+)?$/.test(cleaned)) return null;
   return cleaned;
+}
+
+/** At most two decimal places (paise, or a hundredth of a unit or kW): what the database keeps. */
+export function hasAtMostTwoDecimals(value: string): boolean {
+  return !/\.\d{3,}$/.test(value);
 }
 
 /** "340.00" → "340", "3.0" → "3": a decimal string as a person would type it. */

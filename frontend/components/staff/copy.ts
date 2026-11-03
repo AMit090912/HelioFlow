@@ -59,6 +59,7 @@ export const READING_FIELDS: { key: string; ai?: string; label: string; unit?: s
 
 export const CALC_ERROR_TEXT: Record<string, string> = {
   ROOF_NOT_VERIFIED: "Verify the roof area (survey or call) before building a quote.",
+  NO_RECOMMENDATION: "There is no size to recommend: the confirmed bill shows no usage. Check the units with the homeowner.",
   SANCTIONED_LOAD_UNKNOWN: "Enter the sanctioned load from the bill or the DISCOM record.",
   NO_OPTION_FITS: "No system fits the verified roof and sanctioned load.",
   NOT_QUOTABLE_TENANT: "Tenants aren't quoted under the current rules.",
@@ -103,6 +104,7 @@ export const PROJECT_ERROR_TEXT: Record<string, string> = {
   STAGE_NOT_NEXT: "Someone else moved this project. Refresh to see the latest stage.",
   REASON_REQUIRED: "Give a short reason (at least 5 characters).",
   DATE_IN_PAST: "The installation date can't be in the past.",
+  DATE_TOO_FAR: "Pick an installation date within two years.",
   ADVANCE_TOO_LARGE: "The advance can't be more than the cost after subsidy.",
   LEAD_STATUS_CONFLICT: "An advance can be recorded only after the homeowner accepts a quote.",
   RULE_INVALID: "The end date must be on or after the start date.",

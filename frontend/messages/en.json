@@ -93,7 +93,7 @@
     "NOT_AUTHENTICATED": "Please sign in.",
     "FORBIDDEN": "You don't have access to this.",
     "CSRF_HEADER_MISSING": "The request was incomplete. Refresh the page and try again.",
-    "RATE_LIMITED": "Too many attempts. Wait a minute and try again.",
+    "RATE_LIMITED": "Too many attempts. Wait a few minutes and try again.",
     "INVALID_CREDENTIALS": "Those details don't match an account.",
     "ACCOUNT_EXISTS": "An account with these details already exists. Sign in instead.",
     "PASSWORD_TOO_COMMON": "That password is too common. Choose another.",
@@ -107,7 +107,7 @@
     "FILE_TOO_LARGE": "This file is larger than 10 MB. Try a smaller photo or the PDF from your DISCOM.",
     "PAYLOAD_TOO_LARGE": "This file is larger than 10 MB. Try a smaller photo or the PDF from your DISCOM.",
     "FILE_EMPTY": "This file is empty. Choose your bill again.",
-    "FILE_TYPE_UNSUPPORTED": "Upload a JPG, PNG or PDF.",
+    "FILE_TYPE_UNSUPPORTED": "Upload a JPG, PNG, WebP or PDF.",
     "UNSUPPORTED_MEDIA_TYPE": "Upload a JPG, PNG or PDF.",
     "IMAGE_UNREADABLE": "We couldn't open this image. Try taking the photo again.",
     "IMAGE_TOO_LARGE": "This image is too large. Try a normal phone photo.",
@@ -130,7 +130,9 @@
     "LEAD_STATUS_CONFLICT": "This can't be done right now. Refresh the page and try again.",
     "LINK_INACTIVE": "This link is no longer active.",
     "NAME_INVALID": "Enter your name using letters only (no numbers or symbols).",
-    "DEMO_NOT_SEEDED": "Demo accounts aren't set up yet. Run the seed first."
+    "DEMO_NOT_SEEDED": "Demo accounts aren't set up yet. Run the seed first.",
+    "QUOTE_OUTDATED": "Our roof check changed after this quote, so this size no longer fits. We'll send you a revised quote.",
+    "UPLOAD_LIMIT": "You've uploaded a lot of files in the last hour. Please try again in an hour."
   },
   "home": {
     "title": "My solar",
@@ -309,7 +311,9 @@
       "units": "Enter units between 0 and 5,000.",
       "amount": "Enter an amount above ₹0.",
       "load": "Enter a load between 0.1 and 100 kW.",
-      "consumer": "Use digits only."
+      "consumer": "Use digits only.",
+      "decimals": "Use at most two decimal places.",
+      "tooLong": "Keep this to {max} characters or fewer."
     },
     "flags": {
       "low_confidence": "We weren't sure about this one. Please check it against your bill.",
@@ -510,6 +514,7 @@
       "net_metering_completed": "Net metering completed",
       "subsidy_applied": "Subsidy application submitted",
       "subsidy_credited": "Subsidy credited"
-    }
+    },
+    "unavailable": "We couldn't load this page"
   }
 }

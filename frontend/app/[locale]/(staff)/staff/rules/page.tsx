@@ -102,7 +102,7 @@ function EndDate({ rule, onSave }: { rule: { effective_to: string | null }; onSa
 }
 
 function PriceRules({ canEdit }: { canEdit: boolean }) {
-  const { data } = usePriceRules();
+  const { data, isError, refetch } = usePriceRules();
   const close = useClosePriceRule();
   const create = useCreatePriceRule();
   const [form, setForm] = useState({ min_kw: "1", max_kw: "10", price_per_kw: "", effective_from: "", note: "" });
@@ -127,7 +127,7 @@ function PriceRules({ canEdit }: { canEdit: boolean }) {
   return (
     <Card title="Price rules">
       {!data ? (
-        <Skeleton className="h-24 w-full" />
+        isError ? <LoadFailed onRetry={() => refetch()} /> : <Skeleton className="h-24 w-full" />
       ) : (
         <ul className="divide-y divide-border">
           {data.map((r) => (
@@ -195,7 +195,7 @@ function parseSlabs(text: string): Slab[] | null {
 }
 
 function SubsidyRules({ canEdit }: { canEdit: boolean }) {
-  const { data } = useSubsidyRules();
+  const { data, isError, refetch } = useSubsidyRules();
   const close = useCloseSubsidyRule();
   const create = useCreateSubsidyRule();
   const [form, setForm] = useState({ slabs: "", cap_amount: "", effective_from: "", source_note: "" });
@@ -231,7 +231,7 @@ function SubsidyRules({ canEdit }: { canEdit: boolean }) {
   return (
     <Card title="Subsidy rules">
       {!data ? (
-        <Skeleton className="h-24 w-full" />
+        isError ? <LoadFailed onRetry={() => refetch()} /> : <Skeleton className="h-24 w-full" />
       ) : (
         <ul className="divide-y divide-border">
           {data.map((r: SubsidyRule) => (
@@ -281,16 +281,28 @@ function SubsidyRules({ canEdit }: { canEdit: boolean }) {
   );
 }
 
+/** A card whose rows couldn't load: say so and offer a retry, never an endless placeholder. */
+function LoadFailed({ onRetry }: { onRetry: () => void }) {
+  return (
+    <div role="alert" className="flex flex-col items-start gap-3">
+      <p className="text-ink">Couldn&apos;t load this list. Check your connection and try again.</p>
+      <Button variant="outline" className="h-11" onClick={onRetry}>
+        Try again
+      </Button>
+    </div>
+  );
+}
+
 function show(value: unknown): string {
   return Array.isArray(value) ? value.join(", ") : String(value);
 }
 
 function Settings({ canEdit }: { canEdit: boolean }) {
-  const { data } = useSettingsRows();
+  const { data, isError, refetch } = useSettingsRows();
   return (
     <Card title="Settings">
       {!data ? (
-        <Skeleton className="h-24 w-full" />
+        isError ? <LoadFailed onRetry={() => refetch()} /> : <Skeleton className="h-24 w-full" />
       ) : (
         <ul className="divide-y divide-border">
           {data.map((row) => (

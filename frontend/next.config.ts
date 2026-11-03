@@ -3,10 +3,33 @@ import createNextIntlPlugin from "next-intl/plugin";
 
 const withNextIntl = createNextIntlPlugin("./i18n/request.ts");
 
+// Content-Security-Policy (§14). Everything is served from this origin (the API through the
+// /api rewrite, fonts self-hosted by next/font). Next.js's inline bootstrap scripts need
+// 'unsafe-inline' without nonces; external scripts, framing and plugins are still refused.
+// Dev mode also needs 'unsafe-eval' (React refresh), so the policy is production-only.
+const CSP = [
+  "default-src 'self'",
+  "script-src 'self' 'unsafe-inline'",
+  "style-src 'self' 'unsafe-inline'",
+  "img-src 'self' data: blob:",
+  "font-src 'self' data:",
+  "connect-src 'self'",
+  "object-src 'none'",
+  "base-uri 'self'",
+  "form-action 'self'",
+  "frame-ancestors 'none'",
+].join("; ");
+
 const SECURITY_HEADERS = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "DENY" },
   { key: "Referrer-Policy", value: "strict-origin-when-cross-origin" },
+  ...(process.env.NODE_ENV === "production"
+    ? [
+        { key: "Content-Security-Policy", value: CSP },
+        { key: "Strict-Transport-Security", value: "max-age=63072000; includeSubDomains" },
+      ]
+    : []),
 ];
 
 const nextConfig: NextConfig = {

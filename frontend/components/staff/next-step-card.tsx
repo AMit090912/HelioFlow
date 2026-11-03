@@ -33,7 +33,10 @@ function Journey({ step, dark }: { step: NextStep["step"]; dark: boolean }) {
             />
             <span
               className={cn(
-                "mt-1.5 flex items-center gap-1 truncate text-[0.75rem]",
+                // Phones show only the current step's label (allowed to run past its column);
+                // six labels don't fit in 390 px.
+                "mt-1.5 items-center gap-1 whitespace-nowrap text-[0.75rem]",
+                now ? "flex overflow-visible" : "hidden truncate sm:flex",
                 now ? (dark ? "font-semibold text-white" : "font-semibold text-ink") : dark ? "text-white/60" : "text-ink-2",
               )}
             >

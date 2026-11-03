@@ -11,7 +11,7 @@ import { describedBy, Field, UnitInput } from "@/components/lead-form/field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ApiError } from "@/lib/api";
-import { formatBillMonth, formatNumber, parseDecimalInput, plainDecimal } from "@/lib/format";
+import { formatBillMonth, formatNumber, hasAtMostTwoDecimals, parseDecimalInput, plainDecimal } from "@/lib/format";
 import { useConfirmReading, type ConfirmValues, type Reading } from "@/lib/leads";
 import { cn } from "@/lib/utils";
 
@@ -81,7 +81,10 @@ export function ValuesForm({
   const [formError, setFormError] = useState<string | null>(null);
 
   const ai = mode === "review" ? reading.ai : null;
-  const months = ai?.monthly_units.value ?? null;
+  // Only plausible months (0–5,000 units, latest 24) are shown and sent: a misread month is left
+  // out, as it is from the suggested average, so it can never block confirming (the API limit).
+  const readMonths = ai?.monthly_units.value?.filter((m) => m.units >= 0 && m.units <= 5000).slice(-24);
+  const months = readMonths?.length ? readMonths : null;
   const flags = mode === "review" ? flagsByField(reading) : {};
 
   const optionalDecimal = (check: (n: number) => boolean, message: string) =>
@@ -90,6 +93,7 @@ export function ValuesForm({
       // "" → null (left empty); unparseable → undefined, which is an error, never "empty".
       .transform((raw) => (raw.trim() === "" ? null : (parseDecimalInput(raw) ?? undefined)))
       .refine((v) => v !== undefined, t("fieldErrors.number"))
+      .refine((v) => v === null || v === undefined || hasAtMostTwoDecimals(v), t("fieldErrors.decimals"))
       .refine((v) => v === null || v === undefined || check(Number(v)), message);
   const requiredDecimal = (check: (n: number) => boolean, message: string) =>
     z
@@ -97,6 +101,7 @@ export function ValuesForm({
       .refine((raw) => raw.trim() !== "", t("fieldErrors.required"))
       .transform((raw) => parseDecimalInput(raw) ?? "")
       .refine((v) => v !== "", t("fieldErrors.number"))
+      .refine(hasAtMostTwoDecimals, t("fieldErrors.decimals"))
       .refine((v) => check(Number(v)), message);
   const optionalText = (max: number, pattern?: RegExp, message?: string) =>
     z
@@ -107,9 +112,9 @@ export function ValuesForm({
   const schema = z.object({
     avg_monthly_units: requiredDecimal((n) => n >= 0 && n <= 5000, t("fieldErrors.units")),
     bill_amount: requiredDecimal((n) => n > 0 && n <= 1_000_000, t("fieldErrors.amount")),
-    sanctioned_load_kw: optionalDecimal((n) => n > 0 && n <= 100, t("fieldErrors.load")),
+    sanctioned_load_kw: optionalDecimal((n) => n >= 0.1 && n <= 100, t("fieldErrors.load")),
     consumer_number: optionalText(30, /^[0-9 -]*$/, t("fieldErrors.consumer")),
-    tariff_category: optionalText(60),
+    tariff_category: optionalText(60, undefined, t("fieldErrors.tooLong", { max: 60 })),
     fixed_charge_monthly: optionalDecimal((n) => n >= 0 && n <= 100_000, t("fieldErrors.number")),
   });
   type In = z.input<typeof schema>;
@@ -158,6 +163,10 @@ export function ValuesForm({
   };
 
   const flagged = Object.keys(flags).length > 0;
+  // Doubts about the document itself (not one field): say so above the form, in the person's
+  // words, so a water bill or an unreadable photo is never confirmed without a warning.
+  const DOC_FLAGS = ["not_electricity_bill", "legibility_poor"] as const;
+  const docFlags = mode === "review" ? DOC_FLAGS.filter((c) => reading.flags?.document?.includes(c)) : [];
   const field = (
     name: FieldName,
     opts: { unit?: string; unitAt?: "start" | "end"; inputMode?: "decimal" | "numeric" | "text"; optional?: boolean; hint?: string },
@@ -207,7 +216,19 @@ export function ValuesForm({
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
-      {flagged ? (
+      {docFlags.length ? (
+        <div role="alert" className="flex items-start gap-2 rounded-xl border border-attention/40 bg-attention-bg px-3.5 py-3 text-sm text-attention">
+          <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
+          <div className="space-y-1">
+            {docFlags.map((code) => (
+              <p key={code} className="font-medium">
+                {t(`reupload.reasons.${code}`)}
+              </p>
+            ))}
+            <p>{t("review.checkNote")}</p>
+          </div>
+        </div>
+      ) : flagged ? (
         <p className="flex items-start gap-2 rounded-xl bg-attention-bg px-3.5 py-3 text-sm text-attention">
           <AlertTriangle className="mt-0.5 size-4 shrink-0" aria-hidden />
           {t("review.checkNote")}

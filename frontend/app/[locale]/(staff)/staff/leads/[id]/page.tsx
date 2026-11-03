@@ -44,10 +44,16 @@ export default function StaffLeadPage({ params }: { params: Promise<{ id: string
       </Link>
       {error && !lead ? (
         <div role="alert" className="flex flex-col items-start gap-3">
-          <p className="text-ink">{error instanceof ApiError && error.status === 404 ? "This lead doesn't exist." : "Couldn't load this lead."}</p>
-          <Button variant="outline" className="h-11" onClick={() => refetch()}>
-            Try again
-          </Button>
+          {error instanceof ApiError && (error.status === 404 || error.status === 422) ? (
+            <p className="text-ink">This lead doesn&apos;t exist.</p>
+          ) : (
+            <>
+              <p className="text-ink">Couldn&apos;t load this lead.</p>
+              <Button variant="outline" className="h-11" onClick={() => refetch()}>
+                Try again
+              </Button>
+            </>
+          )}
         </div>
       ) : !lead ? (
         <div className="space-y-4" aria-busy="true">

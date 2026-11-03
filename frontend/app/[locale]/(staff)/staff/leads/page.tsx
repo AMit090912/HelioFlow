@@ -58,7 +58,8 @@ export default function LeadsInboxPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
-        <div role="group" aria-label="Whose move" className="flex rounded-xl border border-border bg-background p-1">
+        {/* On a phone the tabs scroll inside their own box instead of widening the page. */}
+        <div role="group" aria-label="Whose move" className="flex max-w-full overflow-x-auto rounded-xl border border-border bg-background p-1">
           {WHO.map((w) => (
             <button
               key={w.value}
@@ -66,7 +67,7 @@ export default function LeadsInboxPage() {
               aria-pressed={who === w.value}
               onClick={() => setWho(w.value)}
               className={cn(
-                "inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium",
+                "inline-flex h-9 shrink-0 items-center gap-2 whitespace-nowrap rounded-lg px-3 text-sm font-medium",
                 who === w.value ? "bg-night text-white" : "text-ink-2 hover:bg-surface",
               )}
             >
@@ -124,7 +125,9 @@ export default function LeadsInboxPage() {
 
       {error && !leads ? (
         <div role="alert" className="flex flex-col items-start gap-3">
-          <p className="text-ink">{error instanceof ApiError ? error.message : "Couldn't load leads."}</p>
+          <p className="text-ink">
+            {error instanceof ApiError && error.status === 403 ? "Leads are for staff only." : "Couldn't load leads. Check your connection and try again."}
+          </p>
           <Button variant="outline" className="h-11" onClick={() => refetch()}>
             Try again
           </Button>

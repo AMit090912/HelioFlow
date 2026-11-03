@@ -7,6 +7,7 @@ import { useLocale, useTranslations } from "next-intl";
 import { Logo } from "@/components/brand/logo";
 import { SpotProgress } from "@/components/illustrations/spot";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { api, ApiError } from "@/lib/api";
 import { formatDay } from "@/lib/format";
@@ -18,7 +19,8 @@ export function StatusView({ token }: { token: string }) {
   const t = useTranslations("project");
   const te = useTranslations("errors");
   const locale = useLocale();
-  const { data, error, isPending } = useQuery({
+  const tc = useTranslations("common");
+  const { data, error, isPending, refetch, isFetching } = useQuery({
     queryKey: ["public-status", token],
     queryFn: () => api<PublicStatus>(`/api/public/status/${encodeURIComponent(token)}`),
     retry: (count, err) => !(err instanceof ApiError && err.status < 500) && count < 2,
@@ -42,10 +44,15 @@ export function StatusView({ token }: { token: string }) {
           </div>
         ) : inactive || !data ? (
           <div role="status" className="rounded-3xl border border-border bg-background px-6 py-12 text-center">
-            <h1 className="font-display text-2xl font-semibold text-ink">{inactive ? t("inactive.title") : te("UNKNOWN")}</h1>
+            <h1 className="font-display text-2xl font-semibold text-ink">{inactive ? t("inactive.title") : t("unavailable")}</h1>
             <p className="mx-auto mt-2 max-w-sm text-ink-2">
               {inactive ? t("inactive.body") : error instanceof ApiError && te.has(error.code) ? te(error.code) : te("UNKNOWN")}
             </p>
+            {inactive ? null : (
+              <Button variant="outline" className="mt-5 h-11" onClick={() => refetch()} disabled={isFetching}>
+                {tc("retry")}
+              </Button>
+            )}
           </div>
         ) : (
           <Status data={data} locale={locale} />
