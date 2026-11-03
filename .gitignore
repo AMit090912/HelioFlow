@@ -8,11 +8,17 @@
 __pycache__/
 *.py[cod]
 .venv/
+venv/
 .pytest_cache/
 .ruff_cache/
+.mypy_cache/
 .coverage
+.coverage.*
 coverage/
 htmlcov/
+*.egg-info/
+dist/
+build/
 
 # Node / Next.js
 node_modules/
@@ -23,13 +29,29 @@ next-env.d.ts
 playwright-report/
 test-results/
 
-# Tooling scratch
-.claude/settings.local.json
+# Tooling scratch (AI assistant settings, generated agent notes)
+.claude/
 .superpowers/
+frontend/AGENTS.md
+CLAUDE.md
+
+# Deploy tooling (local links to hosted projects)
+.vercel/
+.render/
+
+# Keys, certificates and logs: never in the repo
+*.pem
+*.key
+*.p12
+*.log
+npm-debug.log*
 
 # OS / editors
 .DS_Store
 Thumbs.db
+desktop.ini
+~$*
+*.swp
 .vscode/
 .idea/
 
