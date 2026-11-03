@@ -103,7 +103,11 @@
     "CONFLICT": "This changed in the meantime. Refresh the page and try again.",
     "METHOD_NOT_ALLOWED": "Something went wrong. Try again.",
     "SETTINGS_INCOMPLETE": "Something went wrong on our side. Try again in a moment.",
-    "RULE_AMBIGUOUS": "Something went wrong on our side. Try again in a moment."
+    "RULE_AMBIGUOUS": "Something went wrong on our side. Try again in a moment.",
+    "QUOTE_SUPERSEDED": "This quote was replaced by a newer one.",
+    "QUOTE_ALREADY_ACCEPTED": "You've already accepted this quote.",
+    "OPTION_NOT_OFFERED": "Choose one of the sizes in this quote.",
+    "LEAD_STATUS_CONFLICT": "This can't be done right now. Refresh the page and try again."
   },
   "home": {
     "title": "My solar",
@@ -342,6 +346,86 @@
       "survey": "Site survey",
       "quote": "Your quote",
       "install": "Installation"
+    },
+    "quote": {
+      "readyKicker": "Your quote is ready",
+      "readyTitle": "{kw} system, {net} after subsidy",
+      "readyBody": "Compare the sizes, see how we worked it out, and accept when you're ready.",
+      "acceptedKicker": "Quote accepted",
+      "acceptedTitle": "{kw} system",
+      "acceptedBody": "We'll contact you about the advance payment and the installation date.",
+      "cta": "See your quote"
+    },
+    "closed": {
+      "title": "Your enquiry is closed",
+      "body": "If you would like to go ahead with solar, start a new check or call us."
+    }
+  },
+  "quote": {
+    "title": "Your solar quote",
+    "meta": "Quote {number} · sent {date}",
+    "back": "My solar",
+    "size": "System size",
+    "net": "Cost after subsidy",
+    "payback": "Pays for itself in",
+    "paybackYears": "about {years} years",
+    "paybackImmediate": "straight away",
+    "notAvailable": "Not available yet",
+    "estimate": "Estimate",
+    "options": "Choose a size",
+    "suggested": "Suggested",
+    "savesYear": "Saves about {amount} a year",
+    "optionsHint": "The suggested size covers most of your yearly use. Other sizes are shown so you can compare.",
+    "breakdownToggle": "See how we calculated this",
+    "b": {
+      "price": "Price (GST included)",
+      "subsidy": "Central subsidy",
+      "net": "Cost after subsidy",
+      "generation": "Electricity the system makes in a year",
+      "usable": "Share used in your home ({pct}%)",
+      "rate": "Saving per unit",
+      "fixed": "Fixed charge per month",
+      "savings": "Yearly savings (estimate)",
+      "unitsYear": "{units} units a year",
+      "perUnit": "{rate} per unit",
+      "source": {
+        "bill": "from your bill",
+        "default": "standard figure",
+        "override": "adjusted by our team"
+      },
+      "subsidyRule": "Subsidy rule {scheme}, in force from {date}."
+    },
+    "assumptionsTitle": "What this quote assumes",
+    "assumptions": {
+      "price": "Prices are placeholder figures until the installer confirms them.",
+      "subsidy": "Subsidy follows the rule in force when this quote was made; check it against the official scheme before you pay.",
+      "usable": "About {pct}% of the electricity made is used to cut your bill; the rest is lost or exported.",
+      "surplus": "Electricity beyond what you use in a year is not counted as a saving.",
+      "fixed": "Fixed charges on your bill do not go down with solar.",
+      "simple": "No allowance is made for panel ageing or future tariff changes."
+    },
+    "disclaimer": "Estimate. Actual savings depend on usage, tariff changes and weather. Not guaranteed.",
+    "download": "Download PDF",
+    "accept": {
+      "cta": "Accept the {kw} system",
+      "confirmTitle": "Accept the {kw} system for {net}?",
+      "confirmBody": "We'll call you to collect the advance and fix an installation date. Changing the size later needs a new quote.",
+      "confirm": "Yes, accept",
+      "cancel": "Not yet",
+      "accepting": "Accepting…"
+    },
+    "accepted": {
+      "title": "You accepted the {kw} system",
+      "body": "We'll contact you about the advance payment and the installation date."
+    },
+    "superseded": {
+      "title": "This quote was replaced",
+      "body": "We've sent you a newer quote.",
+      "cta": "See the latest quote"
+    },
+    "closed": {
+      "title": "This enquiry is closed",
+      "body": "This quote can no longer be accepted. Call us if you would like to continue."
     }
   }
 }

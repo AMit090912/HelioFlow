@@ -5,9 +5,16 @@
 
 const LOCALE_TAG: Record<string, string> = { en: "en-IN", hi: "hi-IN", mr: "mr-IN" };
 
+/** For words (month names). */
 function tag(locale: string): string {
   return LOCALE_TAG[locale] ?? "en-IN";
 }
+
+/**
+ * For numbers: always en-IN. Western digits with Indian grouping (₹1,02,000) in every language
+ * (A-27). mr-IN would group as ₹102,000, so the language must not pick the number format.
+ */
+const NUMBER_LOCALE = "en-IN";
 
 function toNumber(value: string | number | null | undefined): number | null {
   if (value === null || value === undefined || value === "") return null;
@@ -23,7 +30,7 @@ export function formatRupees(
 ): string {
   const n = toNumber(value);
   if (n === null) return "—";
-  return new Intl.NumberFormat(tag(locale), {
+  return new Intl.NumberFormat(NUMBER_LOCALE, {
     style: "currency",
     currency: "INR",
     minimumFractionDigits: fractionDigits,
@@ -40,7 +47,7 @@ export function formatNumber(
 ): string {
   const n = toNumber(value);
   if (n === null) return "—";
-  return new Intl.NumberFormat(tag(locale), {
+  return new Intl.NumberFormat(NUMBER_LOCALE, {
     maximumFractionDigits: maxDigits,
     numberingSystem: "latn",
   }).format(n);

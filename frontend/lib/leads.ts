@@ -45,6 +45,7 @@ export type LeadMine = {
   recommendation_status: "provisional" | "final" | null;
   current_reading: ReadingRef | null;
   latest_reading: ReadingRef | null;
+  current_quote: { id: string; status: "sent" | "accepted" | "superseded" } | null;
   created_at: string;
 };
 

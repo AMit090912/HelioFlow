@@ -13,6 +13,7 @@ import { Link } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api";
 import { formatKw, formatNumber, formatRupees } from "@/lib/format";
 import { useMyLeads, useReading, type LeadMine } from "@/lib/leads";
+import { focusOption, useQuote } from "@/lib/quotes";
 import { cn } from "@/lib/utils";
 
 export default function MySolarPage() {
@@ -75,6 +76,20 @@ function Dashboard() {
       />
     );
   }
+  if (lead.status === "closed_lost") {
+    return (
+      <EmptyState
+        illustration={<SpotEmptyRoof className="w-full" />}
+        title={td("closed.title")}
+        message={td("closed.body")}
+        action={
+          <Button asChild size="lg" className="h-12 px-6 text-base">
+            <Link href="/get-solar">{td("start")}</Link>
+          </Button>
+        }
+      />
+    );
+  }
   return lead.next_action ? <Qualified lead={lead} /> : <ContinueCard lead={lead} />;
 }
 
@@ -115,6 +130,9 @@ function Qualified({ lead }: { lead: LeadMine }) {
 
   return (
     <div className="space-y-6">
+      {lead.current_quote ? (
+        <QuoteCard quoteId={lead.current_quote.id} code={lead.code} />
+      ) : (
       <section className="relative overflow-hidden rounded-3xl bg-night p-6 text-white sm:p-9">
         <SunriseMark className="pointer-events-none absolute -right-8 bottom-0 w-44 opacity-80 sm:w-60" />
         <div className="relative max-w-md">
@@ -126,8 +144,11 @@ function Qualified({ lead }: { lead: LeadMine }) {
           <p className="mt-5 text-sm text-white/60">{t("reference", { code: lead.code })}</p>
         </div>
       </section>
+      )}
 
       <div className="grid gap-6 sm:grid-cols-2">
+        {/* Once a quote exists its size is the one that counts; the provisional guess is hidden. */}
+        {lead.current_quote ? null : (
         <section className="rounded-3xl border border-border bg-background p-6">
           <p className="text-sm text-ink-2">{t("size.label")}</p>
           {lead.recommended_kw ? (
@@ -143,10 +164,11 @@ function Qualified({ lead }: { lead: LeadMine }) {
             <p className="mt-2 text-ink">{t("size.none")}</p>
           )}
         </section>
+        )}
         {lead.current_reading ? <BillSummary lead={lead} readingId={lead.current_reading.id} /> : null}
       </div>
 
-      <Timeline />
+      <Timeline stage={stageOf(lead)} />
     </div>
   );
 }
@@ -177,7 +199,42 @@ function BillSummary({ lead, readingId }: { lead: LeadMine; readingId: string })
   );
 }
 
-function Timeline() {
+/** Where the lead is on the way to installation: 1 = contact next, 3 = quote, 4 = accepted. */
+function stageOf(lead: LeadMine): number {
+  if (lead.current_quote?.status === "accepted") return 4;
+  if (lead.current_quote) return 3;
+  return 1;
+}
+
+function QuoteCard({ quoteId, code }: { quoteId: string; code: string }) {
+  const t = useTranslations("dashboard");
+  const locale = useLocale();
+  const { data: quote } = useQuote(quoteId);
+  if (!quote) return <Skeleton className="h-48 w-full rounded-3xl" />;
+  const option = focusOption(quote);
+  const accepted = quote.status === "accepted";
+  const kw = formatKw(option.kw, locale);
+  return (
+    <section className="relative overflow-hidden rounded-3xl bg-night p-6 text-white sm:p-9">
+      <SunriseMark className="pointer-events-none absolute -right-8 bottom-0 w-44 opacity-80 sm:w-60" />
+      <div className="relative max-w-md">
+        <p className="text-gold-soft">{accepted ? t("quote.acceptedKicker") : t("quote.readyKicker")}</p>
+        <h2 className="font-display mt-1 text-[1.875rem] font-semibold leading-[1.15] sm:text-[2.25rem]">
+          {accepted
+            ? t("quote.acceptedTitle", { kw })
+            : t("quote.readyTitle", { kw, net: formatRupees(option.net, locale) })}
+        </h2>
+        <p className="mt-3 text-white/80">{accepted ? t("quote.acceptedBody") : t("quote.readyBody")}</p>
+        <Button asChild size="lg" className="mt-5 h-12 bg-gold px-6 text-base text-night hover:bg-gold-soft">
+          <Link href={`/my/quote/${quote.id}`}>{t("quote.cta")}</Link>
+        </Button>
+        <p className="mt-4 text-sm text-white/60">{t("reference", { code })}</p>
+      </div>
+    </section>
+  );
+}
+
+function Timeline({ stage }: { stage: number }) {
   const t = useTranslations("dashboard.timeline");
   const steps = ["bill", "contact", "survey", "quote", "install"] as const;
   return (
@@ -185,11 +242,11 @@ function Timeline() {
       <h2 className="font-display text-xl font-semibold text-ink">{t("title")}</h2>
       <ol className="mt-5 space-y-4">
         {steps.map((step, i) => {
-          const state = i === 0 ? "done" : i === 1 ? "current" : "todo";
+          const state = i < stage ? "done" : i === stage ? "current" : "todo";
           return (
             <li key={step} className="relative flex items-center gap-4" aria-current={state === "current" ? "step" : undefined}>
               {i < steps.length - 1 ? (
-                <span aria-hidden className={cn("absolute left-[0.6875rem] top-7 h-4 w-0.5", i === 0 ? "bg-teal" : "bg-border")} />
+                <span aria-hidden className={cn("absolute left-[0.6875rem] top-7 h-4 w-0.5", i < stage ? "bg-teal" : "bg-border")} />
               ) : null}
               <span
                 aria-hidden
