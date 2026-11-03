@@ -156,8 +156,9 @@ function LeadView({ lead }: { lead: StaffLeadDetail }) {
           </Section>
           <Section title="Actions">
             <LeadActions lead={lead} />
+            <h3 className="mt-5 border-t border-border pt-4 text-sm font-semibold text-ink">History</h3>
             {lead.events.length ? (
-              <ol className="mt-4 space-y-3 border-t border-border pt-4 text-sm">
+              <ol className="mt-3 space-y-3 text-sm">
                 {lead.events.map((e) => (
                   <li key={e.id}>
                     <p className="font-medium text-ink">
@@ -174,7 +175,7 @@ function LeadView({ lead }: { lead: StaffLeadDetail }) {
                 ))}
               </ol>
             ) : (
-              <p className="mt-3 text-sm text-ink-2">No actions yet.</p>
+              <p className="mt-2 text-sm text-ink-2">Nothing has happened on this lead yet.</p>
             )}
           </Section>
         </div>

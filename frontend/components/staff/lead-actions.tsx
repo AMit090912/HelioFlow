@@ -1,5 +1,6 @@
 "use client";
 
+import { CalendarCheck, XCircle } from "lucide-react";
 import { useState } from "react";
 
 import { errorText } from "@/components/staff/copy";
@@ -36,21 +37,32 @@ export function LeadActions({ lead }: { lead: StaffLeadDetail }) {
     <div className="space-y-3">
       <div className="flex flex-wrap gap-2">
         {canUpgrade ? (
-          <Button variant="outline" className="h-11" aria-expanded={open === "upgrade"} onClick={() => setOpen(open === "upgrade" ? null : "upgrade")}>
+          <Button
+            variant="outline"
+            className="h-11"
+            aria-expanded={open === "upgrade"}
+            onClick={() => setOpen(open === "upgrade" ? null : "upgrade")}
+          >
+            <CalendarCheck className="size-4" aria-hidden />
             Upgrade to survey visit
           </Button>
         ) : null}
         {canClose ? (
           <Button
-            variant="ghost"
-            className="h-11 text-ink-2"
+            variant="outline"
+            className="h-11 border-destructive/40 text-destructive hover:bg-destructive/5 hover:text-destructive"
             aria-expanded={open === "close"}
             onClick={() => setOpen(open === "close" ? null : "close")}
           >
+            <XCircle className="size-4" aria-hidden />
             Close lead
           </Button>
         ) : null}
       </div>
+      <p className="text-[0.8125rem] text-ink-2">
+        {canUpgrade ? "Upgrade when a call shows a visit is worth it. " : ""}
+        Close the lead if the homeowner isn&apos;t going ahead; it stays on record with your reason.
+      </p>
       {open ? (
         <div className="space-y-2 rounded-xl border border-border bg-surface/60 p-3">
           <label htmlFor="action-reason" className="text-sm font-medium text-ink">
