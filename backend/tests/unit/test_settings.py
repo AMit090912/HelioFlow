@@ -39,3 +39,17 @@ def test_blank_demo_logins_means_off(monkeypatch):
     assert Settings(_env_file=None).demo_logins is None
     monkeypatch.setenv("DEMO_LOGINS", "true")
     assert Settings(_env_file=None).demo_logins is True
+
+
+@pytest.mark.parametrize(
+    "given",
+    [
+        '"postgresql://u:p@ep-x.neon.tech/helio?sslmode=require"',
+        "'postgresql://u:p@ep-x.neon.tech/helio?sslmode=require'",
+        "  postgresql://u:p@ep-x.neon.tech/helio?sslmode=require \n",
+    ],
+)
+def test_a_url_pasted_with_quotes_or_spaces_still_works(given):
+    """Deploy finding: Neon shows DATABASE_URL="…" and the quotes got pasted into Render."""
+    url = Settings(_env_file=None, database_url=given).database_url
+    assert url == "postgresql+psycopg://u:p@ep-x.neon.tech/helio?sslmode=require"

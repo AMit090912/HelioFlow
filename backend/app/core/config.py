@@ -60,6 +60,8 @@ class Settings(BaseSettings):
         # Neon/Render hand out postgresql:// (or postgres://) URLs; SQLAlchemy would then look for
         # psycopg2, which is not installed. Use psycopg 3 for any plain Postgres URL.
         if isinstance(value, str):
+            # Dashboards copy it as DATABASE_URL="…": tolerate pasted quotes and stray whitespace.
+            value = value.strip().strip("\"'").strip()
             for prefix in ("postgresql://", "postgres://"):
                 if value.startswith(prefix):
                     return "postgresql+psycopg://" + value[len(prefix) :]
