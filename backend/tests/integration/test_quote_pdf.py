@@ -90,3 +90,14 @@ def test_pdf_carries_the_logo(client, lead):  # noqa: F811
     quote = send(client, lead).json()
     pdf = PdfReader(io.BytesIO(client.get(f"/api/quotes/{quote['id']}/pdf?lang=hi").content))
     assert len(pdf.pages[0].images) >= 1  # the HelioFlow mark
+
+
+@pytest.mark.parametrize("lang", ["en", "hi", "mr"])
+def test_pdf_is_one_page_with_the_visual_summary(client, lead, lang):  # noqa: F811
+    verify(client, lead)
+    quote = send(client, lead).json()
+    pdf = PdfReader(io.BytesIO(client.get(f"/api/quotes/{quote['id']}/pdf?lang={lang}").content))
+    assert len(pdf.pages) == 1
+    text = pdf.pages[0].extract_text()
+    if lang == "en":
+        assert "You pay" in text and "What happens next" in text

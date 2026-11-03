@@ -4,6 +4,20 @@ marked for native-speaker review before launch (A-26)."""
 
 STRINGS: dict[str, dict[str, str]] = {
     "en": {
+        "card_savings": "Yearly savings",
+        "years_short": "{years} years",
+        "lede": "Worked out from your electricity bill and your roof.",
+        "yearly": "Saves about {amount} a year",
+        "after": "after {amount} subsidy",
+        "glance": "Your money at a glance ({kw})",
+        "g_subsidy": "Subsidy {amount}",
+        "g_you": "You pay {amount}",
+        "g_payback": "Your savings cover the cost in about {years} years (estimate)",
+        "next": "What happens next",
+        "n1": "You accept the option that suits you",
+        "n2": "Our team confirms the final size and price",
+        "n3": "Advance paid, then installation on your roof",
+        "n4": "Net metering, then the subsidy is credited",
         "title": "Your solar quotation",
         "quote_no": "Quote {number}",
         "dated": "Dated {date}",
@@ -55,6 +69,20 @@ STRINGS: dict[str, dict[str, str]] = {
         "the site survey.",
     },
     "hi": {
+        "card_savings": "सालाना बचत",
+        "years_short": "{years} वर्ष",
+        "lede": "आपके बिजली बिल और आपकी छत के आधार पर तैयार।",
+        "yearly": "सालाना लगभग {amount} की बचत",
+        "after": "{amount} सब्सिडी के बाद",
+        "glance": "आपका पैसा, एक नज़र में ({kw})",
+        "g_subsidy": "सब्सिडी {amount}",
+        "g_you": "आप देंगे {amount}",
+        "g_payback": "बचत से आपकी लागत लगभग {years} वर्ष में वसूल (अनुमान)",
+        "next": "आगे क्या होगा",
+        "n1": "आप अपने लिए सही विकल्प स्वीकार करते हैं",
+        "n2": "हमारी टीम अंतिम आकार और कीमत पक्की करती है",
+        "n3": "अग्रिम राशि, फिर आपकी छत पर इंस्टॉलेशन",
+        "n4": "नेट मीटरिंग, फिर सब्सिडी खाते में आती है",
         "title": "आपका सोलर कोटेशन",
         "quote_no": "कोटेशन {number}",
         "dated": "दिनांक {date}",
@@ -104,6 +132,20 @@ STRINGS: dict[str, dict[str, str]] = {
         "footer": "HelioFlow, Company A, नागपुर के लिए। अंतिम कीमत और आकार साइट विज़िट के बाद पक्के होंगे।",
     },
     "mr": {
+        "card_savings": "वार्षिक बचत",
+        "years_short": "{years} वर्षे",
+        "lede": "तुमचे वीज बिल आणि तुमच्या छतावरून तयार केलेले.",
+        "yearly": "वर्षाला साधारण {amount} बचत",
+        "after": "{amount} अनुदानानंतर",
+        "glance": "तुमचे पैसे, एका नजरेत ({kw})",
+        "g_subsidy": "अनुदान {amount}",
+        "g_you": "तुम्ही द्याल {amount}",
+        "g_payback": "बचतीतून तुमचा खर्च साधारण {years} वर्षांत वसूल (अंदाज)",
+        "next": "पुढे काय होईल",
+        "n1": "तुम्हाला योग्य पर्याय तुम्ही स्वीकारता",
+        "n2": "आमची टीम अंतिम आकार आणि किंमत निश्चित करते",
+        "n3": "आगाऊ रक्कम, मग तुमच्या छतावर इन्स्टॉलेशन",
+        "n4": "नेट मीटरिंग, मग अनुदान खात्यात जमा होते",
         "title": "तुमचे सोलर कोटेशन",
         "quote_no": "कोटेशन {number}",
         "dated": "दिनांक {date}",
@@ -155,3 +197,4 @@ STRINGS: dict[str, dict[str, str]] = {
 }
 
 ASSUMPTION_KEYS = ("a_price", "a_subsidy", "a_usable", "a_surplus", "a_fixed", "a_gst", "a_simple")
+NEXT_KEYS = ("n1", "n2", "n3", "n4")
