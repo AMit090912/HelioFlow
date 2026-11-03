@@ -26,6 +26,13 @@ class Quote(IdMixin, Base):
             unique=True,
             postgresql_where=text("status = 'sent'"),
         ),
+        # An accepted quote is terminal, so a lead has at most one (the staff inbox joins it).
+        Index(
+            "uq_quotes_one_accepted_per_lead",
+            "lead_id",
+            unique=True,
+            postgresql_where=text("status = 'accepted'"),
+        ),
         # Lifecycle fields must agree with status, so a superseded quote can never carry
         # acceptance data (and vice versa) — the trigger alone only stops re-setting a field.
         CheckConstraint(

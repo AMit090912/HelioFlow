@@ -31,3 +31,11 @@ def test_a_pasted_neon_url_uses_the_installed_driver(given):
     """Neon hands out postgresql:// URLs; SQLAlchemy would pick psycopg2 (not installed)."""
     url = Settings(_env_file=None, database_url=given).database_url
     assert url == "postgresql+psycopg://u:p@ep-x.neon.tech/helio?sslmode=require"
+
+
+def test_blank_demo_logins_means_off(monkeypatch):
+    """`.env.example` ships `DEMO_LOGINS=` blank; that must not stop the API from starting."""
+    monkeypatch.setenv("DEMO_LOGINS", "")
+    assert Settings(_env_file=None).demo_logins is None
+    monkeypatch.setenv("DEMO_LOGINS", "true")
+    assert Settings(_env_file=None).demo_logins is True

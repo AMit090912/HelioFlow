@@ -6,7 +6,7 @@
  */
 import { expect, test, type Browser, type Page } from "@playwright/test";
 
-import { SAMPLE_BILL, signIn, STAFF_PASSWORD, uniquePhone } from "./helpers";
+import { HOMEOWNER_STATE, SAMPLE_BILL, signIn, STAFF_PASSWORD, uniquePhone } from "./helpers";
 
 test.describe.configure({ mode: "serial" });
 
@@ -15,7 +15,7 @@ let leadCode = "";
 let statusLink = "";
 
 async function homeowner(browser: Browser): Promise<Page> {
-  return (await browser.newContext({ storageState: "e2e/.state/homeowner.json" })).newPage();
+  return (await browser.newContext({ storageState: HOMEOWNER_STATE })).newPage();
 }
 
 test("homeowner: lead form, bill upload and confirmation", async ({ page }) => {
@@ -49,7 +49,7 @@ test("homeowner: lead form, bill upload and confirmation", async ({ page }) => {
   const mine = await page.evaluate(() => fetch("/api/leads/mine").then((r) => r.json()));
   leadId = mine[0].id;
   expect(mine[0].next_action).not.toBeNull(); // scored and qualified
-  await page.context().storageState({ path: "e2e/.state/homeowner.json" });
+  await page.context().storageState({ path: HOMEOWNER_STATE });
 });
 
 test("sales: finds the lead, verifies the roof and sends a quote", async ({ page }) => {

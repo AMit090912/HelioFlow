@@ -48,6 +48,12 @@ class Settings(BaseSettings):
             return cls.model_fields[info.field_name].default
         return value
 
+    @field_validator("demo_logins", mode="before")
+    @classmethod
+    def _blank_means_off(cls, value: object) -> object:
+        # `.env.example` ships `DEMO_LOGINS=` blank: that means off, not a parse error at startup.
+        return None if isinstance(value, str) and not value.strip() else value
+
     @field_validator("database_url", "test_database_url", mode="before")
     @classmethod
     def _psycopg_driver(cls, value: object) -> object:

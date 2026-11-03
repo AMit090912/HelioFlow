@@ -263,3 +263,31 @@ def test_one_open_quote_per_lead(db_session: Session):
     with pytest.raises(IntegrityError):
         make_quote(db_session, lead, owner, "HF-Q-2")
     db_session.rollback()
+
+
+def test_one_accepted_quote_per_lead(db_session: Session):
+    """The inbox joins the accepted quote; the database guarantees there is at most one."""
+    owner = make_user(db_session)
+    lead = make_lead(db_session, owner)
+
+    def accepted(number: str) -> Quote:
+        return Quote(
+            number=number,
+            lead_id=lead.id,
+            status=QuoteStatus.accepted,
+            priced_on=date(2026, 11, 2),
+            snapshot={"options": [{"kw": "3"}]},
+            calc_version="calc-1.0.0",
+            created_by=owner.id,
+            sent_at=NOW,
+            accepted_at=NOW,
+            accepted_by=owner.id,
+            selected_kw=Decimal("3"),
+        )
+
+    db_session.add(accepted("HF-Q-1"))
+    db_session.flush()
+    with pytest.raises(IntegrityError):
+        db_session.add(accepted("HF-Q-2"))
+        db_session.flush()
+    db_session.rollback()

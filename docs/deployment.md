@@ -140,6 +140,9 @@ Do the steps in this order: each one needs a value from the one before.
    DATABASE_URL='<neon connection string>' SEED_DEMO_PASSWORD='<choose a password>' uv run python -m seed
    ```
 
+   Choose a new, strong password here, not the one you use locally: anyone who knows it can sign in
+   as sales or admin on the live site.
+
 ### 3.3 Vercel (frontend)
 
 1. **Add New → Project**, pick the repository, set **Root Directory** to `frontend`. Vercel
