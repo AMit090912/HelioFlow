@@ -58,6 +58,9 @@ In `backend/.env`, set at least:
 | Admin (edits price and subsidy rules) | `admin@helioflow.example` |
 | Homeowners from the brief | `prashant@`, `rohit@`, `ayesha@helioflow.example` |
 
+**Test bills.** `samples/bills/` holds three synthetic bills and the values each should read
+(see its README). Upload one at the bill step.
+
 **AI modes.** `AI_MODE=live` reads bills with Groq, falls back to Gemini, then to manual entry.
 `AI_MODE=demo` recognises only the bundled synthetic sample bill
 (`backend/app/services/ai/samples/sample-bill.jpg`) and labels its reading as a demo. Any other

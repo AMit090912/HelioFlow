@@ -57,6 +57,9 @@ cd ../frontend && cp .env.example .env.local && npm install && npm run dev
 Full steps, environment variables, the seeded accounts and deployment are in
 [docs/deployment.md](docs/deployment.md).
 
+**No bill to hand?** [samples/bills](samples/bills) has three synthetic bills to upload at the bill
+step, with the values the app should read from each. One works without AI keys, in demo mode.
+
 ## Tests
 
 - **Backend.** About 400 unit and integration tests run against a real Postgres. They cover the
