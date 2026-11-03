@@ -332,3 +332,17 @@ def test_zero_fixed_charge_on_bill_is_recorded_as_zero(client, db_session, ai): 
     rate = {"field": "savings_rate", "value": "8", "reason": "Marginal tariff slab"}
     second = send(client, created["id"], [rate]).json()
     assert len(second["overrides"][0]["from"].split(".")[-1]) <= 4  # rounded for the record
+
+
+def test_inbox_row_shows_the_accepted_size(client, lead, db_session):
+    """Once a quote is accepted, the size that counts is the homeowner's choice, not the guess."""
+    verify(client, lead)
+    quote_id = send(client, lead).json()["id"]
+    row = next(r for r in client.get("/api/staff/leads").json() if r["id"] == lead)
+    assert row["accepted_kw"] is None
+    sign_in(client, OWNER)
+    client.post(f"/api/quotes/{quote_id}/accept", headers=CSRF, json={"selected_kw": "2"})
+    sign_in(client, DESK)
+    row = next(r for r in client.get("/api/staff/leads").json() if r["id"] == lead)
+    assert row["accepted_kw"] == "2"
+    assert client.get(f"/api/staff/leads/{lead}").json()["accepted_kw"] == "2"

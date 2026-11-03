@@ -172,6 +172,14 @@ export default function LeadsInboxPage() {
 }
 
 function SizeCell({ lead }: { lead: StaffLeadRow }) {
+  if (lead.accepted_kw) {
+    return (
+      <span>
+        <span className="font-semibold text-ink tabular">{lead.accepted_kw} kW</span>
+        <span className="ml-1.5 text-[0.8125rem] text-ink-2">accepted</span>
+      </span>
+    );
+  }
   if (!lead.recommended_kw) return <span className="text-ink-2">—</span>;
   return (
     <span>

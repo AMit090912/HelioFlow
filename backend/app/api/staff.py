@@ -1,16 +1,17 @@
 """Staff screens 6–7: leads inbox, lead detail and the actions on a lead (§2, §4)."""
 
 import uuid
+from decimal import Decimal
 
 from fastapi import APIRouter, Depends, Query
-from sqlalchemy import case, select
+from sqlalchemy import and_, case, select
 from sqlalchemy.orm import Session
 
 from app.core.db import get_db
 from app.core.deps import require_roles
 from app.core.errors import ApiError
 from app.models import BillFile, BillReading, Lead, LeadEvent, Quote, User
-from app.models.enums import LeadScore, LeadStatus, RoofVerifiedVia
+from app.models.enums import LeadScore, LeadStatus, QuoteStatus, RoofVerifiedVia
 from app.schemas.bills import ReadingOut
 from app.schemas.quotes import LoadRef, QuotePreviewOut, QuoteRequest, QuoteView
 from app.schemas.staff import (
@@ -31,7 +32,7 @@ staff_only = require_roles("sales", "admin")
 HIDDEN_BY_DEFAULT = (LeadStatus.draft, LeadStatus.closed_lost)
 
 
-def _row_fields(lead: Lead, homeowner_name: str) -> dict:
+def _row_fields(lead: Lead, homeowner_name: str, accepted_kw: Decimal | None) -> dict:
     detail = lead.sizing_detail or {}
     flags = list(detail.get("flags", []))
     # Qualification-time flags that staff have since resolved are not shown again.
@@ -53,6 +54,8 @@ def _row_fields(lead: Lead, homeowner_name: str) -> dict:
         "recommendation_status": detail.get("status") if lead.next_action else None,
         "next_action": lead.next_action.value if lead.next_action else None,
         "flags": flags,
+        # The homeowner's accepted size outranks the qualification-time suggestion.
+        "accepted_kw": accepted_kw,
     }
 
 
@@ -63,7 +66,12 @@ def inbox(
     db: Session = Depends(get_db),
     _: User = Depends(staff_only),
 ) -> list[StaffLeadRow]:
-    query = select(Lead, User.full_name).join(User, User.id == Lead.homeowner_id)
+    accepted = and_(Quote.lead_id == Lead.id, Quote.status == QuoteStatus.accepted)
+    query = (
+        select(Lead, User.full_name, Quote.selected_kw)
+        .join(User, User.id == Lead.homeowner_id)
+        .outerjoin(Quote, accepted)  # at most one: an accepted quote is terminal
+    )
     if score is not None:
         query = query.where(Lead.score == score)
     if status is not None:
@@ -72,7 +80,15 @@ def inbox(
         query = query.where(Lead.status.not_in(HIDDEN_BY_DEFAULT))
     rank = case((Lead.score == LeadScore.high, 0), (Lead.score == LeadScore.low, 1), else_=2)
     query = query.order_by(rank, Lead.created_at.desc()).limit(500)
-    return [StaffLeadRow(**_row_fields(lead, name)) for lead, name in db.execute(query)]
+    return [StaffLeadRow(**_row_fields(lead, name, kw)) for lead, name, kw in db.execute(query)]
+
+
+def _accepted_kw(db: Session, lead: Lead) -> Decimal | None:
+    return db.scalar(
+        select(Quote.selected_kw).where(
+            Quote.lead_id == lead.id, Quote.status == QuoteStatus.accepted
+        )
+    )
 
 
 def _detail(db: Session, lead: Lead) -> StaffLeadDetail:
@@ -93,7 +109,7 @@ def _detail(db: Session, lead: Lead) -> StaffLeadDetail:
         select(Quote).where(Quote.lead_id == lead.id).order_by(Quote.sent_at.desc())
     ).scalars()
     return StaffLeadDetail(
-        **_row_fields(lead, owner.full_name),
+        **_row_fields(lead, owner.full_name, _accepted_kw(db, lead)),
         homeowner=HomeownerContact(
             full_name=owner.full_name,
             phone=owner.phone,

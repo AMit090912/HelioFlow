@@ -23,6 +23,8 @@ export type StaffLeadRow = {
   recommendation_status: "provisional" | "final" | null;
   next_action: "survey_visit" | "call" | null;
   flags: string[];
+  /** The size the homeowner accepted; outranks recommended_kw once set. */
+  accepted_kw: string | null;
 };
 
 export type LeadEvent = {

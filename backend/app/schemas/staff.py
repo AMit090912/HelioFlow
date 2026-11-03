@@ -33,8 +33,9 @@ class StaffLeadRow(BaseModel):
     recommendation_status: str | None
     next_action: str | None
     flags: list[str]
+    accepted_kw: Decimal | None = None
 
-    @field_serializer("recommended_kw")
+    @field_serializer("recommended_kw", "accepted_kw")
     def _plain(self, value: Decimal | None) -> str | None:
         return plain(value)
 

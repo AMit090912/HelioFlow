@@ -232,7 +232,13 @@ function LeadView({ lead }: { lead: StaffLeadDetail }) {
               <dt className="text-ink-2">Pincode</dt>
               <dd className="text-ink tabular">{lead.pincode}</dd>
               <dt className="text-ink-2">Size</dt>
-              <dd className="text-ink">{lead.recommended_kw ? `${lead.recommended_kw} kW (${lead.recommendation_status})` : "None"}</dd>
+              <dd className="text-ink">
+                {lead.accepted_kw
+                  ? `${lead.accepted_kw} kW (accepted)`
+                  : lead.recommended_kw
+                    ? `${lead.recommended_kw} kW (${lead.recommendation_status})`
+                    : "None"}
+              </dd>
             </dl>
             {lead.flags.length ? (
               <div className="mt-3 flex flex-wrap gap-1">
