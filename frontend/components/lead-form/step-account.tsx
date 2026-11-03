@@ -20,6 +20,10 @@ import { SESSION_KEY } from "@/lib/use-session";
 const INPUT = "h-12 rounded-xl bg-background text-base md:text-base";
 const PHONE = /^(?:\+?91)?[6-9]\d{9}$/;
 const EMAIL = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+// Letters in any script (with Devanagari vowel signs), spaces and . ' ’ - only: the same rule as
+// the server (app/core/names.py). Starts with a letter and has at least two letters.
+const NAME = /^\p{L}[\p{L}\p{M} .'’-]*$/u;
+const isName = (v: string) => NAME.test(v) && (v.match(/\p{L}/gu)?.length ?? 0) >= 2;
 
 /**
  * Step 2. A new visitor creates an account and agrees to how their details are used; a homeowner
@@ -48,7 +52,10 @@ export function StepAccount({
   const schema = signedIn
     ? z.object({ consent })
     : z.object({
-        full_name: z.string().trim().min(2, t("errors.fullName")).max(120, t("errors.fullName")),
+        full_name: z
+          .string()
+          .transform((v) => v.split(/\s+/).filter(Boolean).join(" "))
+          .refine((v) => v.length <= 120 && isName(v), t("errors.fullName")),
         phone: z
           .string()
           .transform((v) => v.replace(/[\s-]/g, ""))

@@ -11,8 +11,8 @@ from app.schemas.bills import plain
 CONSENT_VERSION = "2026-11-v1"
 
 
-class LeadIn(BaseModel):
-    """Screen 1, step 1 + the consent from step 2 (ARCHITECTURE §2, §14)."""
+class LeadDetails(BaseModel):
+    """Screen 1, step 1: the home details. Editable until the bill is confirmed."""
 
     model_config = ConfigDict(extra="ignore")
 
@@ -22,6 +22,11 @@ class LeadIn(BaseModel):
     roof_area_sqft: Decimal = Field(gt=0, le=100_000)
     monthly_bill: Decimal = Field(gt=0, le=1_000_000)
     pincode: str = Field(pattern=r"^[1-9][0-9]{5}$")
+
+
+class LeadIn(LeadDetails):
+    """Step 1 + the consent from step 2 (ARCHITECTURE §2, §14)."""
+
     consent: bool
 
 

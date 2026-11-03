@@ -264,3 +264,34 @@ def test_a_late_read_never_pulls_a_qualified_lead_back(client, ai, db_session):
     upload_and_confirm(client, lead["id"], {"avg_monthly_units": "340", "bill_amount": "3200"})
     _back_to_review(db_session, lead["id"])
     assert db_session.get(Lead, lead["id"]).status.value == "survey_pending"
+
+
+# --- Editing home details from the bill step (user request) ---
+
+
+def test_homeowner_can_edit_details_before_the_bill_is_confirmed(client, ai):
+    signup(client, "edit@example.com")
+    lead = create_lead(client)
+    edit = {**HOME, "roof_area_sqft": "600", "monthly_bill": "2800", "ownership": "owner"}
+    res = client.patch(f"/api/leads/{lead['id']}", headers=CSRF, json=edit)
+    assert res.status_code == 200, res.text
+    body = res.json()
+    assert body["roof_area_sqft"] == "600" and body["declared_monthly_bill"] == "2800"
+    assert body["code"] == lead["code"]  # same lead, not a new one
+    bad = client.patch(f"/api/leads/{lead['id']}", headers=CSRF, json={**edit, "pincode": "12"})
+    assert bad.status_code == 422
+
+
+def test_details_are_locked_once_the_bill_is_confirmed(client, ai):
+    signup(client, "locked@example.com")
+    lead = create_lead(client)
+    upload_and_confirm(client, lead["id"], {"avg_monthly_units": "340", "bill_amount": "3200"})
+    res = client.patch(f"/api/leads/{lead['id']}", headers=CSRF, json=HOME)
+    assert (res.status_code, res.json()["error"]["code"]) == (409, "LEAD_LOCKED")
+
+
+def test_cannot_edit_someone_elses_lead(client, ai):
+    signup(client, "first@example.com")
+    lead = create_lead(client)
+    signup(client, "second@example.com")
+    assert client.patch(f"/api/leads/{lead['id']}", headers=CSRF, json=HOME).status_code == 404

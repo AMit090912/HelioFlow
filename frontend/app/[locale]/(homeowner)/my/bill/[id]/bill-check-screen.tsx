@@ -1,6 +1,6 @@
 "use client";
 
-import { ArrowLeft, CheckCircle2, FlaskConical } from "lucide-react";
+import { ArrowLeft, CheckCircle2, FlaskConical, ImageUp, Pencil } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useEffect, useState, type ReactNode } from "react";
 
@@ -9,6 +9,7 @@ import { ReadingProgress } from "@/components/bill-check/reading-progress";
 import { ReuploadPanel } from "@/components/bill-check/reupload-panel";
 import { ValuesForm } from "@/components/bill-check/values-form";
 import { HomeownerOnly } from "@/components/homeowner-only";
+import { BillUploader } from "@/components/lead-form/step-bill";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -134,7 +135,10 @@ function ReadingView({ id }: { id: string }) {
       <div className="md:sticky md:top-6">
         <BillPreview readingId={reading.id} />
       </div>
-      <Panel>{side}</Panel>
+      <div className="space-y-4">
+        <Panel>{side}</Panel>
+        {reading.status !== "needs_reupload" ? <ChangeBill reading={reading} onUploaded={goTo} /> : null}
+      </div>
     </div>
   );
 }
@@ -142,5 +146,37 @@ function ReadingView({ id }: { id: string }) {
 function Panel({ children, className }: { children: ReactNode; className?: string }) {
   return (
     <section className={`rounded-3xl border border-border bg-background p-5 sm:p-8 ${className ?? ""}`}>{children}</section>
+  );
+}
+
+/** Wrong photo or wrong details? Replace the photo here, or go back to the home details. */
+function ChangeBill({ reading, onUploaded }: { reading: Reading; onUploaded: (next: Reading) => void }) {
+  const t = useTranslations("billCheck.review");
+  const tf = useTranslations("leadForm");
+  const [open, setOpen] = useState(false);
+  return (
+    <section className="rounded-3xl border border-border bg-background p-5 sm:p-6">
+      {open ? (
+        <div className="space-y-4">
+          <BillUploader leadId={reading.lead_id} onUploaded={onUploaded} submitLabel={t("otherPhoto")} />
+          <Button type="button" variant="ghost" className="h-11 text-ink-2" onClick={() => setOpen(false)}>
+            {t("keepPhoto")}
+          </Button>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2 sm:flex-row sm:flex-wrap">
+          <Button type="button" variant="outline" className="h-12 text-base" onClick={() => setOpen(true)}>
+            <ImageUp className="size-4" aria-hidden />
+            {t("otherPhoto")}
+          </Button>
+          <Button asChild variant="ghost" className="h-12 text-base text-ink-2">
+            <Link href={{ pathname: "/get-solar", query: { lead: reading.lead_id, step: "home" } }}>
+              <Pencil className="size-4" aria-hidden />
+              {tf("editDetails")}
+            </Link>
+          </Button>
+        </div>
+      )}
+    </section>
   );
 }

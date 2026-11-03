@@ -8,6 +8,7 @@ from app.core.config import get_settings
 from app.core.db import get_db
 from app.core.deps import get_current_user
 from app.core.errors import SESSION_COOKIE, ApiError
+from app.core.names import clean_full_name
 from app.core.ratelimit import SlidingWindowLimiter, client_ip
 from app.core.security import (
     create_session_token,
@@ -60,6 +61,9 @@ def _clean_phone(raw: str | None) -> str | None:
 
 @router.post("/signup", status_code=201, response_model=UserOut)
 def signup(body: SignupIn, response: Response, db: Session = Depends(get_db)) -> UserOut:
+    full_name = clean_full_name(body.full_name)
+    if full_name is None:
+        raise ApiError(422, "NAME_INVALID", "Enter your name using letters only.")
     email = _clean_email(body.email)
     phone = _clean_phone(body.phone)
     if email is None and phone is None:
@@ -72,7 +76,7 @@ def signup(body: SignupIn, response: Response, db: Session = Depends(get_db)) ->
 
     user = User(
         role=UserRole.homeowner,
-        full_name=body.full_name.strip(),
+        full_name=full_name,
         email=email,
         phone=phone,
         password_hash=hash_password(body.password),

@@ -10,7 +10,7 @@ class SignupIn(BaseModel):
     # Unknown fields (e.g. "role") are ignored: self sign-up is always a homeowner.
     model_config = ConfigDict(extra="ignore")
 
-    full_name: str = Field(min_length=2, max_length=120)
+    full_name: str = Field(max_length=200)  # rules in app.core.names (NAME_INVALID)
     email: str | None = Field(default=None, max_length=254)
     phone: str | None = Field(default=None, max_length=20)
     password: str = Field(min_length=8, max_length=128)

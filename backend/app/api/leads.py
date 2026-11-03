@@ -14,8 +14,10 @@ from app.core.deps import get_owned_or_404, require_roles
 from app.core.errors import ApiError
 from app.models import BillReading, Lead, Project, User
 from app.models.enums import Ownership, PropertyType, RoofType
-from app.schemas.leads import CONSENT_VERSION, LeadIn, LeadMine
+from app.schemas.leads import CONSENT_VERSION, LeadDetails, LeadIn, LeadMine
 from app.services import projects
+from app.services.bill_reading import UPLOADABLE
+from app.services.lead_actions import lock_lead
 from app.services.quotes import current_quote
 
 router = APIRouter(prefix="/leads", tags=["leads"])
@@ -90,4 +92,29 @@ def get_lead(
     lead_id: uuid.UUID, db: Session = Depends(get_db), user: User = Depends(homeowner)
 ) -> LeadMine:
     lead = get_owned_or_404(db, Lead, lead_id, user)
+    return _mine(db, lead)
+
+
+@router.patch("/{lead_id}", response_model=LeadMine)
+def edit_lead(
+    lead_id: uuid.UUID,
+    body: LeadDetails,
+    db: Session = Depends(get_db),
+    user: User = Depends(homeowner),
+) -> LeadMine:
+    """Back from the bill step to correct home details. Allowed until the bill is confirmed:
+    after that the lead has been scored and sized on these values."""
+    get_owned_or_404(db, Lead, lead_id, user)
+    lead = lock_lead(db, lead_id)
+    if lead.status not in UPLOADABLE:
+        raise ApiError(
+            409, "LEAD_LOCKED", "These details can't be changed after the bill is confirmed."
+        )
+    lead.ownership = Ownership(body.ownership)
+    lead.property_type = PropertyType(body.property_type)
+    lead.roof_type = RoofType(body.roof_type)
+    lead.roof_area_sqft = body.roof_area_sqft
+    lead.declared_monthly_bill = body.monthly_bill
+    lead.pincode = body.pincode
+    db.commit()
     return _mine(db, lead)

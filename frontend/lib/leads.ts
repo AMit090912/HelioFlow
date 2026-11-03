@@ -119,6 +119,9 @@ export const leadKeys = {
 };
 
 export const createLead = (body: LeadIn) => api<LeadMine>("/api/leads", { json: body });
+/** Correct home details until the bill is confirmed (409 LEAD_LOCKED after). */
+export const updateLead = (id: string, body: Omit<LeadIn, "consent">) =>
+  api<LeadMine>(`/api/leads/${id}`, { method: "PATCH", json: body });
 export const fetchMyLeads = () => api<LeadMine[]>("/api/leads/mine");
 export const fetchLead = (id: string) => api<LeadMine>(`/api/leads/${id}`);
 export const fetchReading = (id: string) => api<Reading>(`/api/bills/${id}`);

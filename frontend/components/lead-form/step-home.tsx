@@ -1,8 +1,9 @@
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
+import { Loader2 } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { Controller, useForm, useWatch } from "react-hook-form";
 import { z } from "zod";
 
@@ -11,18 +12,29 @@ import { saveHome, type HomeDraft } from "@/components/lead-form/draft";
 import { describedBy, Field, UnitInput } from "@/components/lead-form/field";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { ApiError } from "@/lib/api";
 import { parseDecimalInput } from "@/lib/format";
 
 const INPUT = "h-12 rounded-xl bg-background text-base md:text-base";
 
+/**
+ * Step 1. Also used to edit the details later (from the bill step or the check-bill screen):
+ * then `onDone` saves to the server, may fail, and `onBack` returns without saving.
+ */
 export function StepHome({
   initial,
   onDone,
+  onBack,
+  submitLabel,
 }: {
   initial: Partial<HomeDraft> | null;
-  onDone: (home: HomeDraft) => void;
+  onDone: (home: HomeDraft) => void | Promise<void>;
+  onBack?: () => void;
+  submitLabel?: string;
 }) {
   const t = useTranslations("leadForm");
+  const te = useTranslations("errors");
+  const [formError, setFormError] = useState<string | null>(null);
 
   const amount = (max: number, message: string) =>
     z
@@ -46,7 +58,7 @@ export function StepHome({
     control,
     register,
     handleSubmit,
-    formState: { errors },
+    formState: { errors, isSubmitting },
   } = useForm<z.input<typeof schema>, unknown, z.output<typeof schema>>({
     resolver: zodResolver(schema),
     defaultValues: {
@@ -65,9 +77,15 @@ export function StepHome({
     saveHome(watched as Partial<HomeDraft>);
   }, [watched]);
 
-  const onSubmit = (values: z.output<typeof schema>) => {
+  const onSubmit = async (values: z.output<typeof schema>) => {
+    setFormError(null);
     saveHome(values);
-    onDone(values);
+    try {
+      await onDone(values);
+    } catch (error) {
+      const code = error instanceof ApiError ? error.code : "UNKNOWN";
+      setFormError(te.has(code) ? te(code) : te("UNKNOWN"));
+    }
   };
 
   return (
@@ -168,9 +186,23 @@ export function StepHome({
         </Field>
       </div>
 
-      <Button type="submit" size="lg" className="h-12 w-full text-base sm:w-auto sm:px-10">
-        {t("next")}
-      </Button>
+      {formError ? (
+        <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 px-3.5 py-3 text-sm text-destructive">
+          {formError}
+        </p>
+      ) : null}
+
+      <div className="flex flex-col-reverse gap-3 sm:flex-row sm:items-center">
+        {onBack ? (
+          <Button type="button" variant="ghost" className="h-12 text-base text-ink-2" onClick={onBack} disabled={isSubmitting}>
+            {t("back")}
+          </Button>
+        ) : null}
+        <Button type="submit" size="lg" className="h-12 w-full text-base sm:w-auto sm:px-10" disabled={isSubmitting}>
+          {isSubmitting ? <Loader2 className="size-4 animate-spin" aria-hidden /> : null}
+          {submitLabel ?? t("next")}
+        </Button>
+      </div>
     </form>
   );
 }

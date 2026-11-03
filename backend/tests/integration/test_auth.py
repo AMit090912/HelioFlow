@@ -174,3 +174,24 @@ def test_security_headers_present(client: TestClient):
     assert res.headers["x-content-type-options"] == "nosniff"
     assert res.headers["x-frame-options"] == "DENY"
     assert res.headers["referrer-policy"] == "strict-origin-when-cross-origin"
+
+
+def test_name_with_digits_or_symbols_is_refused(client: TestClient):
+    for bad in ("Prashant123", "12345", "Raj@kumar", "  ", "R"):
+        res = signup(client, full_name=bad, email=f"n{abs(hash(bad))}@example.com")
+        assert res.status_code == 422, bad
+        assert res.json()["error"]["code"] == "NAME_INVALID", bad
+
+
+def test_real_names_in_any_script_are_accepted(client: TestClient):
+    names = [
+        "Prashant Wankhede",
+        "राहुल शर्मा",
+        "प्रशांत वानखेडे",
+        "Dr. A.P.J. Abdul-Kalam",
+        "D'Souza Mary",
+    ]
+    for i, name in enumerate(names):
+        res = signup(client, full_name=f"  {name}  ", email=f"ok{i}@example.com")
+        assert res.status_code == 201, (name, res.text)
+        assert res.json()["full_name"] == name

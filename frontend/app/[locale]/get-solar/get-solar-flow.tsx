@@ -1,5 +1,7 @@
 "use client";
 
+import { useQueryClient } from "@tanstack/react-query";
+import { ArrowLeft } from "lucide-react";
 import { useSearchParams } from "next/navigation";
 import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
@@ -20,10 +22,11 @@ import { BillTips, BillUploader } from "@/components/lead-form/step-bill";
 import { StepHome } from "@/components/lead-form/step-home";
 import { SunPath } from "@/components/lead-form/sun-path";
 import { LanguageSwitcher } from "@/components/language-switcher";
+import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link, useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api";
-import { useLead, useMyLeads } from "@/lib/leads";
+import { updateLead, useLead, useMyLeads } from "@/lib/leads";
 import { homeFor, useSession } from "@/lib/use-session";
 
 type Phase = "home" | "account" | "bill";
@@ -58,8 +61,15 @@ function Flow() {
     }
     return loadLeadId();
   });
+  // ?step=home with a lead: "Edit home details" from the check-bill screen.
   const [phase, setPhase] = useState<Phase>(() =>
-    leadId ? "bill" : loadHomeDone() && isComplete(home) ? "account" : "home",
+    leadId
+      ? searchParams.get("step") === "home"
+        ? "home"
+        : "bill"
+      : loadHomeDone() && isComplete(home)
+        ? "account"
+        : "home",
   );
 
   // The step list is fixed by whether the person arrived signed in, so it doesn't jump from three
@@ -102,6 +112,13 @@ function Flow() {
     );
   } else if (isStaff) {
     body = <p className="text-ink-2" role="status">{t("staffRedirect")}</p>;
+  } else if (activePhase === "home" && activeLeadId) {
+    // Editing the details of a lead that already exists (Back from the bill step).
+    body = (
+      <StepSection illustration={<SpotHome className="w-24" />} title={t("steps.home")} focus={focusHeading}>
+        <EditHome leadId={activeLeadId} onFinished={() => setPhase("bill")} />
+      </StepSection>
+    );
   } else if (activePhase === "home") {
     body = (
       <StepSection illustration={<SpotHome className="w-24" />} title={t("steps.home")} focus={focusHeading}>
@@ -147,6 +164,12 @@ function Flow() {
         onUploaded={(readingId) => {
           clearDraft();
           router.push(`/my/bill/${readingId}`);
+        }}
+        onBack={() => {
+          // Keep editing the same lead, even when it was found as the open one.
+          saveLeadId(activeLeadId);
+          setLeadId(activeLeadId);
+          setPhase("home");
         }}
         onLost={() => {
           // The saved lead belongs to someone else or no longer exists: start again cleanly.
@@ -238,12 +261,14 @@ function BillStep({
   focus,
   signInToResume,
   onUploaded,
+  onBack,
   onLost,
 }: {
   leadId: string;
   focus: boolean;
   signInToResume: boolean;
   onUploaded: (readingId: string) => void;
+  onBack: () => void;
   onLost: () => void;
 }) {
   const t = useTranslations("leadForm");
@@ -277,12 +302,47 @@ function BillStep({
     <StepSection illustration={<SpotUpload className="w-28" />} title={t("bill.title")} subtitle={t("bill.subtitle")} focus={focus}>
       {lead ? <p className="-mt-3 mb-5 text-sm text-ink-2">{t("bill.leadSaved", { code: lead.code })}</p> : null}
       <div className="grid gap-6 md:grid-cols-[1fr_15rem]">
-        <BillUploader leadId={leadId} onUploaded={(reading) => onUploaded(reading.id)} />
+        <div className="space-y-4">
+          <BillUploader leadId={leadId} onUploaded={(reading) => onUploaded(reading.id)} />
+          <Button type="button" variant="ghost" className="h-12 px-0 text-base text-ink-2 sm:px-4" onClick={onBack}>
+            <ArrowLeft className="size-4" aria-hidden />
+            {t("editDetails")}
+          </Button>
+        </div>
         <div className="space-y-4">
           <BillTips />
           <p className="text-sm text-ink-2 lg:hidden">{t("bill.privacy")}</p>
         </div>
       </div>
     </StepSection>
+  );
+}
+
+/** Step 1 again, pre-filled from the saved lead; saving updates that same lead. */
+function EditHome({ leadId, onFinished }: { leadId: string; onFinished: () => void }) {
+  const t = useTranslations("leadForm");
+  const client = useQueryClient();
+  const { data: lead } = useLead(leadId);
+  if (!lead) return <Skeleton className="h-64 w-full rounded-2xl" />;
+  const initial: HomeDraft = {
+    ownership: lead.ownership,
+    property_type: lead.property_type,
+    roof_type: lead.roof_type,
+    roof_area_sqft: lead.roof_area_sqft,
+    monthly_bill: lead.declared_monthly_bill,
+    pincode: lead.pincode,
+  };
+  return (
+    <StepHome
+      key={lead.id}
+      initial={initial}
+      submitLabel={t("saveAndContinue")}
+      onBack={onFinished}
+      onDone={async (values) => {
+        await updateLead(leadId, values);
+        await client.invalidateQueries({ queryKey: ["leads"] });
+        onFinished();
+      }}
+    />
   );
 }

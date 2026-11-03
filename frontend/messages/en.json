@@ -108,7 +108,8 @@
     "QUOTE_ALREADY_ACCEPTED": "You've already accepted this quote.",
     "OPTION_NOT_OFFERED": "Choose one of the sizes in this quote.",
     "LEAD_STATUS_CONFLICT": "This can't be done right now. Refresh the page and try again.",
-    "LINK_INACTIVE": "This link is no longer active."
+    "LINK_INACTIVE": "This link is no longer active.",
+    "NAME_INVALID": "Enter your name using letters only (no numbers or symbols)."
   },
   "home": {
     "title": "My solar",
@@ -185,7 +186,7 @@
       "roofArea": "Enter the roof area in square feet, for example 400.",
       "monthlyBill": "Enter your monthly bill in rupees, for example 2500.",
       "pincode": "Enter a 6-digit pincode.",
-      "fullName": "Enter your name.",
+      "fullName": "Enter your name using letters only.",
       "phone": "Enter a 10-digit mobile number.",
       "email": "Enter a valid email address, or leave it empty.",
       "password": "Use at least 8 characters.",
@@ -227,7 +228,9 @@
       "privacy": "Your bill is only used for your solar plan and is never shared.",
       "leadSaved": "Your details are saved. Reference {code}."
     },
-    "staffRedirect": "Staff accounts can't submit a homeowner form. Taking you to the inbox…"
+    "staffRedirect": "Staff accounts can't submit a homeowner form. Taking you to the inbox…",
+    "editDetails": "Edit home details",
+    "saveAndContinue": "Save and continue"
   },
   "billCheck": {
     "title": "Check your bill",
@@ -260,7 +263,9 @@
         "period_normalised": "Worked out per month from this {days}-day bill.",
         "meter_readings": "Worked out from the meter readings on your bill."
       },
-      "perMonth": "Per month, worked out from this {days}-day bill."
+      "perMonth": "Per month, worked out from this {days}-day bill.",
+      "otherPhoto": "Upload a different photo",
+      "keepPhoto": "Keep this photo"
     },
     "fields": {
       "avg_monthly_units": "Average units per month",
