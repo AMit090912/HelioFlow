@@ -11,7 +11,7 @@ import { z } from "zod";
 
 import { Logo } from "@/components/brand/logo";
 import { DemoLogins } from "@/components/demo-logins";
-import { SunFlowHome } from "@/components/illustrations/sun-flow-home";
+import { SignInStory, SignInSunrise } from "@/components/illustrations/sign-in-story";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -67,7 +67,7 @@ export function SignInForm() {
     <div className="grid min-h-dvh lg:grid-cols-2">
       {/* Desktop: the sun → panel → home "flow" illustration with the brand promise */}
       <aside className="relative hidden overflow-hidden bg-night lg:block">
-        <SunFlowHome className="absolute inset-0 size-full" />
+        <SignInStory className="absolute inset-0 size-full" />
         {/* Text sits in the open sky, top left; the illustration's sun, array and home stay clear. */}
         <div className="relative flex h-full min-h-dvh flex-col gap-14 p-12">
           <Link href="/" aria-label={tc("appName")} className="self-start rounded-md">
@@ -83,7 +83,7 @@ export function SignInForm() {
       <div className="flex flex-col bg-surface">
         {/* Phone: a short band of the same illustration */}
         <div className="relative h-44 overflow-hidden bg-night lg:hidden">
-          <SunFlowHome className="absolute inset-0 size-full" />
+          <SignInSunrise className="absolute inset-0 size-full" />
           <div className="relative flex h-16 items-center justify-between px-4">
             <Link href="/" aria-label={tc("appName")} className="rounded-md">
               <Logo tone="dark" />
