@@ -121,11 +121,8 @@ export default async function LandingPage({ params }: PageProps<"/[locale]">) {
       </main>
 
       <footer className="bg-night text-white/70">
-        <div className="mx-auto flex max-w-6xl flex-col gap-3 px-4 py-8 text-sm sm:flex-row sm:items-center sm:justify-between sm:px-6">
+        <div className="mx-auto max-w-6xl px-4 py-8 text-sm sm:px-6">
           <p>{tc("footer")}</p>
-          <Link href="/sign-in" className="font-medium text-gold-soft underline-offset-4 hover:underline">
-            {t("staffLink")}
-          </Link>
         </div>
       </footer>
     </>
