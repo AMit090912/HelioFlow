@@ -98,7 +98,7 @@ export function SignInForm() {
         </div>
 
         <main className="flex flex-1 items-start px-4 pb-16 lg:items-center lg:px-8">
-          <div className="relative z-10 mx-auto -mt-10 w-full max-w-md rounded-3xl border border-border bg-background p-6 shadow-[0_24px_60px_-32px_rgba(1,46,43,0.35)] sm:p-9 lg:mt-0">
+          <div className="relative z-10 mx-auto mt-6 w-full max-w-md rounded-3xl border border-border bg-background p-6 shadow-[0_24px_60px_-32px_rgba(1,46,43,0.35)] sm:p-9 lg:mt-0">
             <h1 className="font-display text-[2rem] font-semibold text-ink">{t("title")}</h1>
             <p className="mt-2 text-ink-2">{t("subtitle")}</p>
 
