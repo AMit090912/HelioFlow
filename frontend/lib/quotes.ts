@@ -49,6 +49,8 @@ export type QuoteView = {
   selected_kw: string | null;
   accepted_at: string | null;
   superseded_by_quote_id: string | null;
+  /** For a replaced quote: the lead's newest quote (not just the next one). */
+  latest_quote_id: string | null;
   recommended_kw: string;
   options: QuoteOption[];
   removed: Removed[];

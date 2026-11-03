@@ -492,6 +492,10 @@
     "closed": {
       "title": "This enquiry is closed",
       "body": "This quote can no longer be accepted. Call us if you would like to continue."
+    },
+    "updated": {
+      "title": "Your quote was updated",
+      "body": "This is the latest version. Earlier versions can no longer be accepted."
     }
   },
   "project": {

@@ -37,7 +37,8 @@ def _for(user: User, view: QuoteView) -> QuoteView:
 def get_quote(
     quote_id: uuid.UUID, db: Session = Depends(get_db), user: User = Depends(get_current_user)
 ) -> QuoteView:
-    return _for(user, quotes.view_of(*readable_quote(db, quote_id, user)))
+    quote, lead = readable_quote(db, quote_id, user)
+    return _for(user, quotes.view_of(quote, lead, db))
 
 
 @router.post("/{quote_id}/accept", response_model=QuoteView)

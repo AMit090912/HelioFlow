@@ -391,3 +391,17 @@ def test_absurd_override_values_are_refused_cleanly(client, lead, field, value):
     body = {"overrides": [{"field": field, "value": value}]}
     res = client.post(f"/api/staff/leads/{lead}/quote-preview", headers=CSRF, json=body)
     assert res.status_code == 422, res.text[:300]
+
+
+def test_an_old_quote_points_straight_to_the_newest(client, lead):
+    """After several revisions the homeowner goes to the newest quote in one step, not along the
+    chain of replacements one click at a time."""
+    verify(client, lead)
+    first = send(client, lead).json()["id"]
+    send(client, lead)
+    third = send(client, lead).json()["id"]
+    sign_in(client, OWNER)
+    old = client.get(f"/api/quotes/{first}").json()
+    assert old["status"] == "superseded"
+    assert old["latest_quote_id"] == third
+    assert client.get(f"/api/quotes/{third}").json()["latest_quote_id"] is None

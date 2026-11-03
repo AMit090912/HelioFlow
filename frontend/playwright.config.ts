@@ -31,7 +31,8 @@ export default defineConfig({
       command: "uv run uvicorn app.main:app --port 8100",
       cwd: "../backend",
       url: `${API}/api/health`,
-      reuseExistingServer: !process.env.CI,
+      // Never reuse: a leftover server on this port would test an old build.
+      reuseExistingServer: false,
       timeout: 120_000,
       env: {
         DATABASE_URL,
@@ -48,7 +49,8 @@ export default defineConfig({
     {
       command: "npm run build && npm run start -- --port 3100",
       url: WEB,
-      reuseExistingServer: !process.env.CI,
+      // Never reuse: a leftover server on this port would test an old build.
+      reuseExistingServer: false,
       timeout: 300_000,
       env: { BACKEND_URL: API },
     },

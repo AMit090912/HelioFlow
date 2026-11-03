@@ -376,8 +376,13 @@ def homeowner_view(view: QuoteView) -> QuoteView:
     return view.model_copy(update={"overrides": public})
 
 
-def view_of(quote: Quote, lead: Lead) -> QuoteView:
+def view_of(quote: Quote, lead: Lead, db: Session | None = None) -> QuoteView:
+    """Pass `db` to resolve `latest_quote_id` for a replaced quote."""
     snap = quote.snapshot
+    latest = None
+    if db is not None and quote.status == QuoteStatus.superseded:
+        newest = current_quote(db, lead.id)
+        latest = newest.id if newest is not None else None
     return QuoteView(
         id=quote.id,
         number=quote.number,
@@ -390,6 +395,7 @@ def view_of(quote: Quote, lead: Lead) -> QuoteView:
         selected_kw=quote.selected_kw,
         accepted_at=quote.accepted_at,
         superseded_by_quote_id=quote.superseded_by_quote_id,
+        latest_quote_id=latest,
         recommended_kw=snap["recommended_kw"],
         options=snap["options"],
         removed=snap["removed"],

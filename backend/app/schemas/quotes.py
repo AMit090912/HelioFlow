@@ -63,6 +63,9 @@ class QuoteView(BaseModel):
     selected_kw: Decimal | None
     accepted_at: datetime | None
     superseded_by_quote_id: uuid.UUID | None
+    # For a replaced quote: the lead's newest quote, so the homeowner goes there in one step
+    # however many revisions followed (superseded_by_quote_id is only the next one).
+    latest_quote_id: uuid.UUID | None = None
     recommended_kw: str
     options: list[dict[str, Any]]
     removed: list[dict[str, str]]

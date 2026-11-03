@@ -2,7 +2,8 @@
 
 import { ArrowLeft, CheckCircle2, Download, Loader2 } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
-import { useState } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 
 import { HomeownerOnly } from "@/components/homeowner-only";
 import { Breakdown } from "@/components/quote/breakdown";
@@ -11,7 +12,7 @@ import { QuoteHero } from "@/components/quote/quote-hero";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
-import { Link } from "@/i18n/navigation";
+import { Link, useRouter } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api";
 import { formatKw, formatRupees } from "@/lib/format";
 import { focusOption, pdfUrl, useAcceptQuote, useQuote, type QuoteView } from "@/lib/quotes";
@@ -30,7 +31,13 @@ export function QuoteScreen({ id }: { id: string }) {
             <ArrowLeft className="size-4" aria-hidden />
             {t("back")}
           </Link>
-          <HomeownerOnly>{() => <QuoteLoader id={id} />}</HomeownerOnly>
+          <HomeownerOnly>
+            {() => (
+              <Suspense>
+                <QuoteLoader id={id} />
+              </Suspense>
+            )}
+          </HomeownerOnly>
         </div>
       </main>
     </>
@@ -41,6 +48,7 @@ function QuoteLoader({ id }: { id: string }) {
   const te = useTranslations("errors");
   const tc = useTranslations("common");
   const { data: quote, error, refetch } = useQuote(id);
+  const jumping = useJumpToLatest(quote);
   if (error && !quote) {
     // A malformed id in the URL (422) is, to the person, the same as a missing one.
     const code = error instanceof ApiError ? (error.status === 422 ? "NOT_FOUND" : error.code) : "UNKNOWN";
@@ -55,7 +63,7 @@ function QuoteLoader({ id }: { id: string }) {
       </div>
     );
   }
-  if (!quote) {
+  if (!quote || jumping) {
     return (
       <div className="mt-6 space-y-4" aria-busy="true">
         <Skeleton className="h-10 w-64" />
@@ -67,10 +75,21 @@ function QuoteLoader({ id }: { id: string }) {
   return <QuoteBody key={quote.id} quote={quote} />;
 }
 
+/** A replaced quote opens the newest one directly, however many revisions followed. */
+function useJumpToLatest(quote: QuoteView | undefined) {
+  const router = useRouter();
+  const latest = quote?.status === "superseded" ? quote.latest_quote_id : null;
+  useEffect(() => {
+    if (latest) router.replace(`/my/quote/${latest}?updated=1`);
+  }, [latest, router]);
+  return latest !== null && latest !== undefined;
+}
+
 function QuoteBody({ quote }: { quote: QuoteView }) {
   const t = useTranslations("quote");
   const te = useTranslations("errors");
   const locale = useLocale();
+  const updated = useSearchParams().get("updated") === "1" && quote.status !== "superseded";
   const accept = useAcceptQuote(quote.id);
   const [chosen, setChosen] = useState(() => focusOption(quote).kw);
   const [confirming, setConfirming] = useState(false);
@@ -101,12 +120,19 @@ function QuoteBody({ quote }: { quote: QuoteView }) {
         <p className="mt-1 text-sm text-ink-2 tabular">{t("meta", { number: quote.number, date: sent })}</p>
       </div>
 
+      {updated ? (
+        <div role="status" className="rounded-2xl border border-teal/30 bg-teal-wash/60 px-5 py-4">
+          <p className="font-semibold text-teal">{t("updated.title")}</p>
+          <p className="mt-1 text-[0.9375rem] text-ink">{t("updated.body")}</p>
+        </div>
+      ) : null}
+
       {quote.status === "superseded" ? (
         <div role="status" className="rounded-2xl border border-attention/30 bg-attention-bg px-5 py-4">
           <p className="font-semibold text-attention">{t("superseded.title")}</p>
           <p className="mt-1 text-[0.9375rem] text-ink">{t("superseded.body")}</p>
-          {quote.superseded_by_quote_id ? (
-            <Link href={`/my/quote/${quote.superseded_by_quote_id}`} className="mt-2 inline-flex min-h-11 items-center font-medium text-teal underline-offset-4 hover:underline">
+          {quote.latest_quote_id ? (
+            <Link href={`/my/quote/${quote.latest_quote_id}`} className="mt-2 inline-flex min-h-11 items-center font-medium text-teal underline-offset-4 hover:underline">
               {t("superseded.cta")}
             </Link>
           ) : null}

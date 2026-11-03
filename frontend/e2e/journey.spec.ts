@@ -13,6 +13,8 @@ test.describe.configure({ mode: "serial" });
 let leadId = "";
 let leadCode = "";
 let statusLink = "";
+let oldestQuoteId = "";
+let newestQuoteId = "";
 
 async function homeowner(browser: Browser): Promise<Page> {
   return (await browser.newContext({ storageState: HOMEOWNER_STATE })).newPage();
@@ -76,16 +78,32 @@ test("sales: finds the lead, verifies the roof and sends a quote", async ({ page
   await expect(send).toBeEnabled();
   await send.click();
   await expect(page.getByText(/Sent HF-Q-/)).toBeVisible();
+
+  // A revision: the homeowner must always land on the newest quote.
+  await page.getByRole("button", { name: "Send revised quote" }).click();
+  await expect(page.getByText(/Sent HF-Q-/)).toBeVisible();
+  const detail = await (await page.request.get(`/api/staff/leads/${leadId}`)).json();
+  const sentQuotes = [...detail.quotes].sort((a, b) => a.sent_at.localeCompare(b.sent_at));
+  expect(sentQuotes).toHaveLength(2);
+  oldestQuoteId = sentQuotes[0].id;
+  newestQuoteId = sentQuotes[1].id;
   await expect(page.getByRole("heading", { name: "Homeowner to accept the quote" })).toBeVisible();
 });
 
 test("homeowner: opens the quote, downloads the PDF and accepts 3 kW", async ({ browser }) => {
   const page = await homeowner(browser);
+
+  // An old link (e.g. from an earlier message) opens the newest quote in one step.
+  await page.goto(`/en/my/quote/${oldestQuoteId}`);
+  await page.waitForURL(`**/en/my/quote/${newestQuoteId}**`);
+  await expect(page.getByText("Your quote was updated")).toBeVisible();
+
   await page.goto("/en/my");
   await page.getByRole("link", { name: "See your quote" }).first().click();
   await page.waitForURL("**/en/my/quote/**");
 
-  const quoteId = page.url().split("/").pop()!;
+  const quoteId = page.url().split("/").pop()!.split("?")[0];
+  expect(quoteId).toBe(newestQuoteId);
   const pdf = await page.request.get(`/api/quotes/${quoteId}/pdf?lang=en`);
   expect(pdf.status()).toBe(200);
   expect(pdf.headers()["content-type"]).toBe("application/pdf");
