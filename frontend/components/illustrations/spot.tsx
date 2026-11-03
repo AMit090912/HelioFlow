@@ -44,6 +44,36 @@ export function SpotQuote({ className }: SpotProps) {
   );
 }
 
+/** Bill upload: a phone framing a bill, with a gold sun rising out of the screen as it goes up. */
+export function SpotUpload({ className }: SpotProps) {
+  return (
+    <svg viewBox="0 0 200 140" className={className} aria-hidden focusable="false">
+      <circle cx="100" cy="76" r="62" fill="#E3EFED" />
+      <rect x="66" y="30" width="68" height="100" rx="10" fill="#FFFFFF" stroke="#006863" strokeWidth="2.5" />
+      <path d="M92 38 H108" stroke="#006863" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M78 58 H112 L122 68 V112 H78 Z" fill="none" stroke="#006863" strokeWidth="2" strokeLinejoin="round" />
+      <path d="M86 78 H112 M86 88 H112 M86 98 H102" stroke="#006863" strokeWidth="2" strokeLinecap="round" opacity="0.55" />
+      <path d="M72 84 H128" stroke="#E5B257" strokeWidth="3" strokeLinecap="round" />
+      <circle cx="152" cy="34" r="12" fill="#E5B257" />
+      <path d="M152 58 V48 M147 53 L152 48 L157 53" fill="none" stroke="#E5B257" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+/** Account step: a key resting on a small house card (your place, your quote). */
+export function SpotAccount({ className }: SpotProps) {
+  return (
+    <svg viewBox="0 0 200 140" className={className} aria-hidden focusable="false">
+      <circle cx="100" cy="76" r="62" fill="#E3EFED" />
+      <rect x="54" y="44" width="92" height="64" rx="8" fill="#FFFFFF" stroke="#006863" strokeWidth="2.5" />
+      <path d="M70 92 V72 L84 62 L98 72 V92 Z" fill="none" stroke="#006863" strokeWidth="2.5" strokeLinejoin="round" />
+      <path d="M108 70 H132 M108 80 H126" stroke="#006863" strokeWidth="2.5" strokeLinecap="round" opacity="0.55" />
+      <circle cx="150" cy="104" r="10" fill="none" stroke="#E5B257" strokeWidth="3.5" />
+      <path d="M142 112 L124 130 M130 124 L135 129" stroke="#E5B257" strokeWidth="3.5" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 /** Homeowner empty state: a roof waiting for its panels (dashed outlines). */
 export function SpotEmptyRoof({ className }: SpotProps) {
   return (

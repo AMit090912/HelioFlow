@@ -2,6 +2,7 @@
 
 import { useQuery, useQueryClient } from "@tanstack/react-query";
 
+import { clearDraft } from "@/components/lead-form/draft";
 import { api, ApiError, type UserOut } from "@/lib/api";
 
 export const SESSION_KEY = ["session"] as const;
@@ -50,6 +51,7 @@ export function useSignOut() {
   return async (locale: string) => {
     await api<void>("/api/auth/logout", { method: "POST" }).catch(() => undefined);
     client.cancelQueries();
+    clearDraft(); // an unfinished form must not follow the next person using this device
     // Deliberate full load (not router.push): drops every cached query holding personal data
     // and prevents RequireSession's sign-in redirect from racing this navigation.
     // eslint-disable-next-line @next/next/no-location-assign-relative-destination

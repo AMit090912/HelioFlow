@@ -82,7 +82,28 @@
     "EMAIL_INVALID": "Enter a valid email address.",
     "INTERNAL_ERROR": "Something went wrong on our side. Try again in a moment.",
     "NETWORK": "We couldn't reach the server. Check your connection and try again.",
-    "UNKNOWN": "Something went wrong. Try again."
+    "UNKNOWN": "Something went wrong. Try again.",
+    "CONSENT_REQUIRED": "Please agree so we can contact you about your solar plan.",
+    "FILE_TOO_LARGE": "This file is larger than 10 MB. Try a smaller photo or the PDF from your DISCOM.",
+    "PAYLOAD_TOO_LARGE": "This file is larger than 10 MB. Try a smaller photo or the PDF from your DISCOM.",
+    "FILE_EMPTY": "This file is empty. Choose your bill again.",
+    "FILE_TYPE_UNSUPPORTED": "Upload a JPG, PNG or PDF.",
+    "UNSUPPORTED_MEDIA_TYPE": "Upload a JPG, PNG or PDF.",
+    "IMAGE_UNREADABLE": "We couldn't open this image. Try taking the photo again.",
+    "IMAGE_TOO_LARGE": "This image is too large. Try a normal phone photo.",
+    "PDF_ENCRYPTED": "This PDF is password-protected. Upload a photo of the bill instead.",
+    "PDF_CORRUPT": "We couldn't open this PDF. Try downloading it again or upload a photo.",
+    "PDF_TOO_MANY_PAGES": "This PDF has too many pages. Upload just the bill page.",
+    "LENGTH_REQUIRED": "The upload was incomplete. Try again.",
+    "LEAD_LOCKED": "Your bill is already confirmed for this enquiry.",
+    "READING_IN_PROGRESS": "We're still reading your bill. Wait a moment.",
+    "READING_ALREADY_CONFIRMED": "These values are already confirmed.",
+    "SETTINGS_INVALID": "Something went wrong on our side. Try again in a moment.",
+    "BAD_REQUEST": "The request wasn't valid. Refresh the page and try again.",
+    "CONFLICT": "This changed in the meantime. Refresh the page and try again.",
+    "METHOD_NOT_ALLOWED": "Something went wrong. Try again.",
+    "SETTINGS_INCOMPLETE": "Something went wrong on our side. Try again in a moment.",
+    "RULE_AMBIGUOUS": "Something went wrong on our side. Try again in a moment."
   },
   "home": {
     "title": "My solar",
@@ -105,5 +126,222 @@
     "waking": "Waking up the server…",
     "wakingHint": "After a quiet period the first request can take up to a minute.",
     "unreachable": "We couldn't reach the server."
+  },
+  "leadForm": {
+    "title": "Check if solar fits your home",
+    "subtitle": "Three short steps. It takes about two minutes.",
+    "stepOf": "Step {current} of {total}",
+    "steps": {
+      "home": "Your home",
+      "account": "Your account",
+      "bill": "Your bill"
+    },
+    "back": "Back",
+    "next": "Continue",
+    "ownership": {
+      "label": "Do you own this home?",
+      "owner": "I own it",
+      "ownerHint": "Owned by me or my family",
+      "tenant": "I rent it",
+      "tenantHint": "We can still help you plan"
+    },
+    "propertyType": {
+      "label": "What kind of building is it?",
+      "home": "Home",
+      "homeHint": "House, bungalow or flat",
+      "business": "Business",
+      "businessHint": "Shop, office or clinic"
+    },
+    "roofType": {
+      "label": "What is the roof made of?",
+      "rcc_flat": "Flat concrete (RCC)",
+      "metal_sheet": "Metal sheet",
+      "tiled": "Tiled",
+      "other": "Something else"
+    },
+    "roofArea": {
+      "label": "Open roof area",
+      "unit": "sq ft",
+      "hint": "A rough figure is fine. 1 kW needs about 100 sq ft of shade-free roof."
+    },
+    "monthlyBill": {
+      "label": "Average monthly electricity bill",
+      "unit": "₹",
+      "hint": "What you usually pay in a month."
+    },
+    "pincode": {
+      "label": "Pincode",
+      "hint": "6 digits, for example 440010"
+    },
+    "errors": {
+      "choose": "Choose one option.",
+      "roofArea": "Enter the roof area in square feet, for example 400.",
+      "monthlyBill": "Enter your monthly bill in rupees, for example 2500.",
+      "pincode": "Enter a 6-digit pincode.",
+      "fullName": "Enter your name.",
+      "phone": "Enter a 10-digit mobile number.",
+      "email": "Enter a valid email address, or leave it empty.",
+      "password": "Use at least 8 characters.",
+      "consent": "Please agree so we can contact you about your solar plan."
+    },
+    "account": {
+      "title": "Create your account",
+      "subtitle": "So you can come back to your quote and follow your installation.",
+      "fullName": "Full name",
+      "phone": "Mobile number",
+      "phoneHint": "We'll call or message you on this number.",
+      "email": "Email (optional)",
+      "password": "Choose a password",
+      "passwordHint": "At least 8 characters.",
+      "consent": "I agree that Company A may use these details and my electricity bill to plan a solar system for me and to contact me about it. I can ask for my data to be deleted at any time.",
+      "submit": "Create account and continue",
+      "submitting": "Creating your account…",
+      "haveAccount": "Already have an account? Sign in",
+      "signedInAs": "Signed in as {name}",
+      "consentOnly": "One last thing before we save your details."
+    },
+    "bill": {
+      "title": "Upload your electricity bill",
+      "subtitle": "A clear photo or the PDF from your DISCOM. We read the units and load for you, and you check them next.",
+      "drop": "Drop your bill here",
+      "pick": "Choose a file",
+      "camera": "Take a photo",
+      "types": "JPG, PNG or PDF, up to 10 MB",
+      "tipsTitle": "For a good photo",
+      "tips": {
+        "flat": "Lay the bill flat on a table.",
+        "light": "Use daylight and avoid shadows.",
+        "whole": "Fit the whole bill in the frame."
+      },
+      "preparing": "Preparing your photo…",
+      "uploading": "Uploading… {percent}%",
+      "submit": "Upload and read my bill",
+      "change": "Choose a different file",
+      "privacy": "Your bill is only used for your solar plan and is never shared.",
+      "leadSaved": "Your details are saved. Reference {code}."
+    },
+    "staffRedirect": "Staff accounts can't submit a homeowner form. Taking you to the inbox…"
+  },
+  "billCheck": {
+    "title": "Check your bill",
+    "back": "My solar",
+    "demo": "Demo mode: these values come from the sample bill, not from AI.",
+    "processing": {
+      "title": "Reading your bill",
+      "subtitle": "This usually takes under a minute. You can stay on this page.",
+      "uploaded": "Bill received",
+      "photo": "Photo checked",
+      "reading": "Reading units, load and amount",
+      "values": "Checking the values make sense",
+      "slow": "This is taking longer than usual. We'll keep trying for a little longer.",
+      "stuckTitle": "We couldn't finish reading your bill",
+      "stuckBody": "You can type the values in yourself. It only takes a minute.",
+      "typeInstead": "Type the values in"
+    },
+    "review": {
+      "title": "Is this right?",
+      "subtitle": "We read these from your bill. Correct anything that's wrong, then confirm.",
+      "previewAlt": "Your uploaded bill",
+      "confirm": "Confirm these values",
+      "confirming": "Saving…",
+      "checkNote": "Please check the highlighted values.",
+      "optional": "optional",
+      "monthsTitle": "Units in recent months",
+      "suggested": {
+        "history_mean": "Average of the {count} months shown on your bill.",
+        "current_month": "From this month's bill. Adjust it if this month was unusual."
+      }
+    },
+    "fields": {
+      "avg_monthly_units": "Average units per month",
+      "bill_amount": "Bill amount",
+      "sanctioned_load_kw": "Sanctioned load",
+      "consumer_number": "Consumer number",
+      "tariff_category": "Tariff category",
+      "fixed_charge_monthly": "Fixed charge per month"
+    },
+    "units": {
+      "units": "units",
+      "kw": "kW",
+      "rupees": "₹"
+    },
+    "fieldErrors": {
+      "required": "This is needed to size your system.",
+      "number": "Enter a number.",
+      "units": "Enter units between 0 and 5,000.",
+      "amount": "Enter an amount above ₹0.",
+      "load": "Enter a load between 0.1 and 100 kW.",
+      "consumer": "Use digits only."
+    },
+    "flags": {
+      "low_confidence": "We weren't sure about this one. Please check it against your bill.",
+      "out_of_range": "This looks unusual for a home. Please check it.",
+      "format_unusual": "This doesn't look like a usual consumer number. Please check it.",
+      "rate_unusual": "The amount and units don't match a usual tariff. Please check both.",
+      "differs_from_declared": "This is quite different from the bill amount you told us. Please check it.",
+      "missing": "We couldn't find this on the bill. Please type it in."
+    },
+    "reupload": {
+      "title": "We need a clearer copy",
+      "subtitle": "We couldn't read this bill well enough.",
+      "reasons": {
+        "too_small": "The photo is too small. Move closer or use a higher resolution.",
+        "too_dark": "The photo is too dark. Try in daylight.",
+        "too_bright": "The photo is washed out. Avoid direct light or flash on the bill.",
+        "blurry": "The photo is blurry. Hold the phone steady and tap to focus.",
+        "not_electricity_bill": "This doesn't look like an electricity bill.",
+        "legibility_poor": "The text on the bill is hard to read."
+      },
+      "cta": "Upload a new photo",
+      "orType": "Or type the values in yourself"
+    },
+    "manual": {
+      "title": "Type in your bill details",
+      "subtitle": "We couldn't read your bill automatically. Copy these from your bill. Only the first two are needed."
+    },
+    "confirmed": "Thanks! Your bill is confirmed. Taking you to your next step…"
+  },
+  "dashboard": {
+    "start": "Check if solar fits my home",
+    "reference": "Reference {code}",
+    "continue": {
+      "title": "Continue your solar check",
+      "bill": "Upload your electricity bill",
+      "billBody": "We need your bill to recommend the right system size.",
+      "check": "Check your bill",
+      "checkBody": "We've read your bill. Please confirm the values.",
+      "reading": "We're reading your bill",
+      "readingBody": "This usually takes under a minute.",
+      "cta": "Continue"
+    },
+    "next": {
+      "kicker": "Your next step",
+      "survey": "We'll schedule your survey visit",
+      "surveyBody": "Our engineer will visit to check your roof and wiring, usually within 3 working days. We'll call you first to fix a time.",
+      "call": "We'll call you first",
+      "callBody": "Someone from our team will call you within 2 working days to talk through what makes sense for you.",
+      "tenantBody": "As your home is rented, we'll talk about options that work for you and your landlord."
+    },
+    "size": {
+      "label": "Suggested system size",
+      "value": "about {kw}",
+      "provisional": "Confirmed after the survey",
+      "final": "Confirmed by our engineer",
+      "none": "We'll suggest a size after we talk"
+    },
+    "bill": {
+      "title": "Your bill",
+      "units": "Average units per month",
+      "amount": "Monthly bill",
+      "roof": "Roof area"
+    },
+    "timeline": {
+      "title": "What happens next",
+      "bill": "Bill checked",
+      "contact": "We contact you",
+      "survey": "Site survey",
+      "quote": "Your quote",
+      "install": "Installation"
+    }
   }
 }

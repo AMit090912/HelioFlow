@@ -40,7 +40,7 @@ export default async function LandingPage({ params }: PageProps<"/[locale]">) {
                   size="lg"
                   className="h-13 rounded-xl bg-gold px-7 text-base font-semibold text-night hover:bg-gold-soft"
                 >
-                  <Link href={{ pathname: "/sign-in", query: { next: "/my" } }}>{t("cta")}</Link>
+                  <Link href="/get-solar">{t("cta")}</Link>
                 </Button>
                 <Button
                   asChild

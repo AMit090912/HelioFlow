@@ -13,13 +13,16 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { usePathname, useRouter } from "@/i18n/navigation";
 import { routing, type Locale } from "@/i18n/routing";
+import { api, type UserOut } from "@/lib/api";
+import { useSession, SESSION_KEY } from "@/lib/use-session";
 import { cn } from "@/lib/utils";
+import { useQueryClient } from "@tanstack/react-query";
 
-/** Keeps the current page, switches the locale prefix. Persisting the choice to the
- * user's profile arrives with the PATCH endpoint in M4. */
 type Placement = { side?: "top" | "bottom"; align?: "start" | "end" };
 
-/** `side`/`align` let the narrow staff sidebar open the menu upwards from its own left edge. */
+/** Keeps the current page and switches the locale prefix. A signed-in person's choice is also
+ * saved to their profile, so messages and the next sign-in use it.
+ * `side`/`align` let the narrow staff sidebar open the menu upwards from its own left edge. */
 export function LanguageSwitcher({
   className,
   side = "bottom",
@@ -30,9 +33,16 @@ export function LanguageSwitcher({
   const pathname = usePathname();
   const router = useRouter();
   const [pending, startTransition] = useTransition();
+  const { user } = useSession();
+  const queryClient = useQueryClient();
 
   const choose = (next: Locale) => {
     if (next === locale) return;
+    if (user) {
+      api<UserOut>("/api/auth/me", { method: "PATCH", json: { preferred_locale: next } })
+        .then((saved) => queryClient.setQueryData(SESSION_KEY, saved))
+        .catch(() => undefined); // the page still switches; saving the preference is best effort
+    }
     const query = typeof window !== "undefined" ? window.location.search : "";
     startTransition(() => router.replace(`${pathname}${query}`, { locale: next }));
   };

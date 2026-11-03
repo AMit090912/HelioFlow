@@ -155,7 +155,7 @@ export function SignInForm() {
             </form>
 
             <p className="mt-8 text-sm text-ink-2">
-              <Link href="/" className="font-medium text-teal underline-offset-4 hover:underline">
+              <Link href="/get-solar" className="font-medium text-teal underline-offset-4 hover:underline">
                 {t("noAccount")}
               </Link>
             </p>

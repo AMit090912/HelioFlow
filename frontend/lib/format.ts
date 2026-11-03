@@ -1,0 +1,76 @@
+/**
+ * Numbers as people in India read them. The API sends decimals as plain strings ("3200.5"), so
+ * these helpers take strings or numbers and never round money silently beyond what is shown.
+ */
+
+const LOCALE_TAG: Record<string, string> = { en: "en-IN", hi: "hi-IN", mr: "mr-IN" };
+
+function tag(locale: string): string {
+  return LOCALE_TAG[locale] ?? "en-IN";
+}
+
+function toNumber(value: string | number | null | undefined): number | null {
+  if (value === null || value === undefined || value === "") return null;
+  const n = typeof value === "number" ? value : Number(value);
+  return Number.isFinite(n) ? n : null;
+}
+
+/** ₹1,02,000 — Indian digit grouping, Latin digits in every language (bills use them too). */
+export function formatRupees(
+  value: string | number | null | undefined,
+  locale: string,
+  fractionDigits = 0,
+): string {
+  const n = toNumber(value);
+  if (n === null) return "—";
+  return new Intl.NumberFormat(tag(locale), {
+    style: "currency",
+    currency: "INR",
+    minimumFractionDigits: fractionDigits,
+    maximumFractionDigits: fractionDigits,
+    numberingSystem: "latn",
+  }).format(n);
+}
+
+/** 1,02,000 / 3.5 — plain grouped number with up to `maxDigits` decimals. */
+export function formatNumber(
+  value: string | number | null | undefined,
+  locale: string,
+  maxDigits = 2,
+): string {
+  const n = toNumber(value);
+  if (n === null) return "—";
+  return new Intl.NumberFormat(tag(locale), {
+    maximumFractionDigits: maxDigits,
+    numberingSystem: "latn",
+  }).format(n);
+}
+
+/** "3 kW" — the unit stays Latin; it is how it is written on bills and panels. */
+export function formatKw(value: string | number | null | undefined, locale: string): string {
+  const n = toNumber(value);
+  return n === null ? "—" : `${formatNumber(n, locale, 2)} kW`;
+}
+
+/** Turns what a person typed ("3,200", " 3200 ") into the plain decimal string the API takes. */
+export function parseDecimalInput(raw: string): string | null {
+  const cleaned = raw.replace(/[,\s₹]/g, "");
+  if (cleaned === "" || !/^\d+(\.\d+)?$/.test(cleaned)) return null;
+  return cleaned;
+}
+
+/** "340.00" → "340", "3.0" → "3": a decimal string as a person would type it. */
+export function plainDecimal(value: string | number | null | undefined): string {
+  if (value === null || value === undefined || value === "") return "";
+  const s = String(value);
+  if (!/^-?\d+(\.\d+)?$/.test(s)) return s;
+  return s.includes(".") ? s.replace(/\.?0+$/, "") : s;
+}
+
+/** "2026-05" → "May 26" (localised month); anything else is shown as read. */
+export function formatBillMonth(month: string, locale: string): string {
+  const m = /^(\d{4})-(\d{2})$/.exec(month);
+  if (!m) return month;
+  const date = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, 1));
+  return new Intl.DateTimeFormat(tag(locale), { month: "short", year: "2-digit", timeZone: "UTC", numberingSystem: "latn" }).format(date);
+}
