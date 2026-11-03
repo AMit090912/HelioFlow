@@ -38,6 +38,7 @@ const FLAG_ORDER = [
   "out_of_range",
   "units_mismatch_readings",
   "may_include_arrears",
+  "bill_amount_partial",
   "differs_from_declared",
   "rate_unusual",
   "format_unusual",

@@ -11,14 +11,14 @@ from app.core.db import SessionLocal
 from app.core.errors import error_response, install_error_handlers
 from app.core.ratelimit import SlidingWindowLimiter
 from app.services.ai import GeminiProvider, GroqProvider, Provider
-from app.services.ai.demo import DemoProvider
+from app.services.ai.demo import SAMPLE_FINGERPRINTS, DemoProvider
 
 
 def providers_for(settings: Settings):
-    """Provider chain per upload (ARCHITECTURE §6.5): live Groq → Gemini, labelled demo, or none
-    in tests (where fakes are injected)."""
-    if settings.ai_mode == "demo":
-        return lambda sha: [DemoProvider(sha)]
+    """Provider chain per upload (ARCHITECTURE §6.5): live Groq → Gemini, or none in tests (where
+    fakes are injected). Demo mode answers only for the synthetic sample bill; a real bill goes to
+    the live chain when keys are set, otherwise straight to manual entry. Demo never tells a
+    person their real bill "isn't a bill"."""
     if settings.ai_mode == "test":
         return lambda sha: []
     chain: list[Provider] = []
@@ -37,6 +37,8 @@ def providers_for(settings: Settings):
                 settings.gemini_api_key, settings.gemini_model, timeout=settings.ai_timeout_seconds
             )
         )
+    if settings.ai_mode == "demo":
+        return lambda sha: [DemoProvider(sha)] if sha in SAMPLE_FINGERPRINTS else chain
     if not chain:
         logging.getLogger("helio.ai").warning(
             "AI_MODE=live but no GROQ_API_KEY or GEMINI_API_KEY: every bill will need manual entry"

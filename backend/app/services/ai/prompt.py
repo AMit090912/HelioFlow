@@ -2,10 +2,12 @@
 
 bill-v2: Indian spot-bill receipts (e.g. TSSPDCL "bill-cum-notice"), multi-month billing periods,
 meter readings, arrears vs this period's charges, and masked numbers.
+bill-v3: reading dates (the period when no day count is printed), instalment bills, and partial
+photos of a bill counted as bills.
 Only values the calculations need are read (§7–§10); the extra fields exist to get those right.
 """
 
-PROMPT_VERSION = "bill-v2"
+PROMPT_VERSION = "bill-v3"
 
 SYSTEM_PROMPT = """You read Indian electricity bills and return JSON only. Bills come from many
 DISCOMs (MSEDCL, TSSPDCL, BESCOM, TPDDL, ...) as printed PDFs, photos of A4 bills, or narrow
@@ -25,6 +27,8 @@ Return exactly this JSON object and nothing else. Every field must be an object 
   "previous_reading":   {"value": number | null, "confidence": 0..1},
   "present_reading":    {"value": number | null, "confidence": 0..1},
   "meter_multiplier":   {"value": number | null, "confidence": 0..1},
+  "previous_reading_date": {"value": "YYYY-MM-DD" | null, "confidence": 0..1},
+  "present_reading_date":  {"value": "YYYY-MM-DD" | null, "confidence": 0..1},
   "bill_amount":        {"value": number | null, "confidence": 0..1},
   "arrears":            {"value": number | null, "confidence": 0..1},
   "total_due":          {"value": number | null, "confidence": 0..1},
@@ -40,15 +44,19 @@ Where to find each value (labels vary by DISCOM):
   Convert to kW: W ÷ 1000; HP × 0.746; kVA as printed. "5.00KW" → 5.
 - current_units: units (kWh) consumed in THIS bill's period: "Units", "Units Consumed",
   "Consumption", "KWH Used", "Net Units". Do not divide or adjust it.
-- billing_days: the number of days this bill covers: "DAYS", "No. of days", or the days between
-  the previous and present reading dates. Bills often cover 2–3 months; report what is printed.
+- billing_days: only a printed day count ("DAYS", "No. of days"). Bills often cover 2–3 months.
+- previous_reading_date / present_reading_date: the dates of the two meter readings, converted to
+  YYYY-MM-DD (Indian bills print DD/MM/YY: "22/04/24" → "2024-04-22").
 - previous_reading / present_reading: the two meter readings ("PREVIOUS", "PRESENT", "Prev Rdg",
   "Pres Rdg", "KWH : 1934 3671"). meter_multiplier: "MF" (usually 1).
 - bill_amount: the charges for THIS billing period only — "BILL AMOUNT", "Current Bill Amt",
   "Current Month Bill", or energy + fixed + duty charges. NEVER use "Total Due", "Total Amount",
   "Net Payable", "Amount Payable" or any figure that includes arrears, previous dues, deposits or
   later-payment amounts. If only a total including arrears is printed, return null here.
-- arrears: previous unpaid dues ("ARREARS", "Previous Balance"). total_due: the final amount
+  If the period's amount is split into several instalments or due dates, bill_amount is the
+  total for the whole period (e.g. "Total Amt Payable at a time"), not one instalment.
+- arrears: previous unpaid dues ("ARREARS", "Previous Balance", "Previous Dues", "Others
+  Unpaid Bill Amount"); 0 when printed as 0.00. total_due: the final amount
   payable ("TOTAL DUE", "Total Amount", "Net Payable").
 - fixed_charge: the fixed, demand or customer charge for the period ("Fixed Charges",
   "CUST CHARGES", "Customer Charges", "Demand Charges"), in rupees.
@@ -58,9 +66,11 @@ Rules:
 - Use null when a value is not clearly visible. Never guess, compute or invent a value.
 - confidence is how sure you are that the value is printed exactly like that (1 = certain).
 - Amounts are numbers in rupees without commas or currency signs.
-- If the document is not an electricity bill, set is_electricity_bill to false.
-- If the image is too blurred, dark or cropped to read the units or amount, set legibility to
-  "poor". Faded thermal print that is still readable is "fair".
+- Photos often show only part of a bill (no header or logo). A document with meter readings,
+  kWh units or electricity charges IS an electricity bill. Set is_electricity_bill to false only
+  for something clearly unrelated (a receipt for groceries, an ID card, a blank page).
+- legibility is "poor" only if you could not read the units or the meter readings at all.
+  Faded thermal print, a partial bill or a slight angle that is still readable is "fair".
 """
 
 USER_IMAGE_PROMPT = "Read this electricity bill and return the JSON object."

@@ -230,8 +230,10 @@ def process_reading(
             reading.validation_flags = flags
             reading.provider, reading.model = result.provider, result.model
             reading.prompt_version = attempts[-1]["prompt_version"]
-            unreadable = {"not_electricity_bill", "legibility_poor"} & set(
-                flags.get("document", [])
+            # The values decide, not the model's opinion of the photo: if the units it needs
+            # were read, the person checks them; re-upload only when nothing usable came back.
+            unreadable = monthly.avg_monthly_units is None and bool(
+                {"not_electricity_bill", "legibility_poor"} & set(flags.get("document", []))
             )
             reading.status = (
                 ReadingStatus.needs_reupload if unreadable else ReadingStatus.needs_review

@@ -292,7 +292,8 @@
       "missing": "We couldn't find this on the bill. Please type it in.",
       "long_billing_period": "This bill covers more than one month, so we worked out a monthly figure. Please check it.",
       "units_mismatch_readings": "The units don't match the meter readings on the bill. Please check them.",
-      "may_include_arrears": "This may include old unpaid amounts (arrears). Enter only this bill's charges."
+      "may_include_arrears": "This may include old unpaid amounts (arrears). Enter only this bill's charges.",
+      "bill_amount_partial": "This amount looked like one instalment rather than the whole bill, so we worked out the monthly amount from it. Please check it."
     },
     "reupload": {
       "title": "We need a clearer copy",

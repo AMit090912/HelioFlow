@@ -1,6 +1,7 @@
 """AI_MODE=demo: a clearly labelled stand-in that only "reads" the synthetic sample bill (§6.5).
 
-It never pretends to read an arbitrary upload: any other file comes back unreadable, and every
+It never pretends to read an arbitrary upload: other files go to the live chain (or to manual
+entry when no keys are set; see app.main.providers_for). Every
 reading made in demo mode is marked is_demo in the API and UI.
 """
 

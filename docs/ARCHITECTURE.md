@@ -410,6 +410,9 @@ The prompt instructs the model to return `null` when a value is not visible and 
 - `previous_reading`/`present_reading`/`meter_multiplier` cross-check the units (flag `units_mismatch_readings`) and supply them when they aren't printed.
 - Labels it maps include: USC / SC.NO → consumer number; CONTRACTED LOAD → sanctioned load; CAT → tariff; CUST CHARGES → fixed charge.
 - A provider answering `"field": null` instead of `{"value": null}` is accepted (Gemini does this).
+- **bill-v3:** the period comes from the two **reading dates** when no day count is printed (22/04/24 → 22/07/24 = 91 days). When printed units disagree with present − previous, the **meter-reading difference is used** (and flagged). Instalment bills: if the amount read is a fraction of what is payable for the period, the period total is used. When arrears aren't known, this applies only if total ≈ k × amount and the bill covers ≈ k months. Otherwise, a long bill with ≥ 200 units/month working out under ₹4/unit is treated as one month's amount **[A-31]**. All of these are flagged for the person to check.
+- Re-upload is asked for only when **no units could be read**. The model's opinion that a photo "isn't a bill" or is "hard to read" no longer blocks a reading whose values came through (partial photos of a bill are common).
+- Demo mode answers only for the synthetic sample. Real bills go to the live chain, or to manual entry without keys.
 - Live-checked on the user's sample bills (Groq and Gemini): every calculation input read correctly, and masked consumer numbers returned as null.
 
 ### 6.2 Provider chain
@@ -850,6 +853,7 @@ Homeowner signs up through the lead form → uploads a synthetic bill → extrac
 | A-27 | Number format in hi/mr | Western digits, Indian grouping | Consistency with bills and payments | next-intl config | Yes |
 | A-28 | Staff UI language | English only | Brief's language constraint concerns customers | — | Yes |
 | A-29 | Roof verification before quoting | Survey or staff call confirmation required | Final size must reflect real roof capacity | No | Yes |
+| A-31 | One-instalment amounts on long bills | Bill ≥ 1.5 months, ≥ 200 units/month, under ₹4/unit → the amount is one month's (flagged) | Quarterly bills print monthly instalments | No | Yes |
 | A-30 | Multi-month bills | A bill covering 25–35 days counts as one month; otherwise units, bill and fixed charge × (365/12) ÷ days | Spot bills often cover 2–3 months | No | Yes |
 
 ---

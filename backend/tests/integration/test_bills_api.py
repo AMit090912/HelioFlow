@@ -138,13 +138,31 @@ def test_blurry_photo_needs_reupload_without_an_ai_call(client, owner, ai):
     assert groq.calls == 0
 
 
-def test_ai_saying_unreadable_asks_for_a_reupload(client, owner, ai):
-    ai["providers"] = [Scripted("groq", {**GOOD, "legibility": "poor"})]
+def test_unreadable_with_no_units_asks_for_a_reupload(client, owner, ai):
+    nothing = {
+        **GOOD,
+        "legibility": "poor",
+        "monthly_units": {"value": None, "confidence": 0},
+        "current_units": {"value": None, "confidence": 0},
+    }
+    ai["providers"] = [Scripted("groq", nothing)]
     _, lead = owner
     reading_id = upload(client, lead, "clear.jpg").json()["id"]
     body = client.get(f"/api/bills/{reading_id}").json()
     assert body["status"] == "needs_reupload"
     assert "legibility_poor" in body["flags"]["document"]
+
+
+def test_values_decide_not_the_models_opinion_of_the_photo(client, owner, ai):
+    """A partial or faded photo the model calls "poor"/"not a bill" but whose units it read
+    goes to review — the person checks the values instead of re-uploading (user report)."""
+    doubtful = {**GOOD, "legibility": "poor", "is_electricity_bill": False}
+    ai["providers"] = [Scripted("groq", doubtful)]
+    _, lead = owner
+    reading_id = upload(client, lead, "clear.jpg").json()["id"]
+    body = client.get(f"/api/bills/{reading_id}").json()
+    assert body["status"] == "needs_review"
+    assert body["suggested_avg_monthly_units"] == "340"
 
 
 # --- Fallbacks: the lead is never lost ---

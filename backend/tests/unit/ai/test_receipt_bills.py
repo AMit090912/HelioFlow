@@ -143,3 +143,119 @@ def test_masked_consumer_number_is_unusual():
         spot(consumer_number={"value": "000000000000", "confidence": 0.9}), declared_bill=None
     )
     assert "format_unusual" in flags["consumer_number"]
+
+
+# --- Quarterly bill paid in instalments (user sample: readings 22/04/24 → 22/07/24) ---
+
+QUARTERLY = {
+    "is_electricity_bill": True,
+    "legibility": "fair",
+    "previous_reading": {"value": 10528, "confidence": 0.95},
+    "present_reading": {"value": 14063, "confidence": 0.95},
+    "previous_reading_date": {"value": "2024-04-22", "confidence": 0.9},
+    "present_reading_date": {"value": "2024-07-22", "confidence": 0.9},
+    "current_units": {"value": 3535, "confidence": 0.95},
+    "bill_amount": {"value": 11196, "confidence": 0.9},  # one of three monthly instalments
+    "arrears": {"value": 0, "confidence": 1},
+    "total_due": {"value": 33234, "confidence": 0.9},
+}
+
+
+def quarterly(**overrides) -> BillExtraction:
+    return BillExtraction.model_validate({**QUARTERLY, **overrides})
+
+
+def test_period_comes_from_reading_dates_when_days_are_not_printed():
+    m = monthly_figures(quarterly())
+    assert m.billing_days == 91
+    assert m.avg_monthly_units == D("1181.57")  # 3535 × (365/12) ÷ 91
+
+
+def test_printed_days_win_over_dates():
+    assert (
+        monthly_figures(quarterly(billing_days={"value": 92, "confidence": 1})).billing_days == 92
+    )
+
+
+def test_unreadable_dates_are_ignored():
+    m = monthly_figures(quarterly(present_reading_date={"value": "22/07/24", "confidence": 0.9}))
+    assert m.billing_days is None
+
+
+def test_meter_readings_win_when_printed_units_disagree():
+    """Gemini misread 3535 as 3595; the two readings it also read give 3535."""
+    m = monthly_figures(quarterly(current_units={"value": 3595, "confidence": 1}))
+    assert m.method == "meter_readings"
+    assert m.avg_monthly_units == D("1181.57")
+    flags = sanity_flags(quarterly(current_units={"value": 3595, "confidence": 1}), None)
+    assert "units_mismatch_readings" in flags["current_units"]
+
+
+def test_one_instalment_is_replaced_by_the_period_total():
+    m = monthly_figures(quarterly())
+    assert m.bill_amount == D("11108.43")  # 33234 (no arrears) × (365/12) ÷ 91
+    flags = sanity_flags(quarterly(), declared_bill=None)
+    assert "bill_amount_partial" in flags["bill_amount"]
+
+
+def test_period_total_is_kept_when_already_read():
+    m = monthly_figures(quarterly(bill_amount={"value": 33587.5, "confidence": 0.9}))
+    assert m.bill_amount == D("11226.59")
+    assert "bill_amount_partial" not in sanity_flags(
+        quarterly(bill_amount={"value": 33587.5, "confidence": 0.9}), None
+    ).get("bill_amount", [])
+
+
+# --- Demo mode never answers for a real bill ---
+
+
+def test_demo_mode_sends_real_bills_to_the_live_chain_or_manual_entry():
+    from app.core.config import Settings
+    from app.main import providers_for
+    from app.services.ai.demo import SAMPLE_FINGERPRINTS, DemoProvider
+
+    sample = next(iter(SAMPLE_FINGERPRINTS))
+    with_keys = providers_for(Settings(ai_mode="demo", groq_api_key="k", gemini_api_key=""))
+    assert [type(p) for p in with_keys(sample)] == [DemoProvider]
+    assert [p.name for p in with_keys("f" * 64)] == ["groq"]
+    no_keys = providers_for(Settings(ai_mode="demo", groq_api_key="", gemini_api_key=""))
+    assert no_keys("f" * 64) == []  # → manual entry, not "this isn't a bill"
+
+
+def test_instalments_recognised_without_arrears_when_months_match():
+    """Groq read total 32933 and one instalment 11196 but no arrears line: 3 months, ×2.94."""
+    e = quarterly(
+        arrears={"value": None, "confidence": 0}, total_due={"value": 32933, "confidence": 0.9}
+    )
+    assert monthly_figures(e).bill_amount == D("11007.83")  # 32933 × (365/12) ÷ 91
+    assert "bill_amount_partial" in sanity_flags(e, None)["bill_amount"]
+
+
+def test_unknown_arrears_with_no_matching_period_keeps_the_bill():
+    """Total ≈ 3× the bill on a ONE-month bill is more likely arrears than instalments."""
+    e = quarterly(
+        arrears={"value": None, "confidence": 0},
+        total_due={"value": 32933, "confidence": 0.9},
+        previous_reading_date={"value": "2024-06-22", "confidence": 0.9},
+    )
+    assert monthly_figures(e).bill_amount == D("11196")
+
+
+def test_one_month_amount_on_a_quarterly_bill_is_used_as_the_month():
+    """Groq's second reading: total_due also 11196 (first due-date row). ₹11196 over 3 months of
+    1,182 units/month would be ₹3.17/unit — too cheap for that use; ₹9.47/unit for one month."""
+    e = quarterly(total_due={"value": 11196, "confidence": 0.9})
+    m = monthly_figures(e)
+    assert m.bill_amount == D("11196")
+    assert "bill_amount_partial" in sanity_flags(e, None)["bill_amount"]
+
+
+def test_low_use_long_bill_is_not_reinterpreted():
+    """A cheap bill for low use (e.g. a subsidised first slab) is left alone."""
+    e = quarterly(
+        present_reading={"value": 10828, "confidence": 1},
+        current_units={"value": 300, "confidence": 1},  # 100 units/month
+        bill_amount={"value": 600, "confidence": 1},
+        total_due={"value": 600, "confidence": 1},
+    )
+    assert monthly_figures(e).bill_amount == D("200.55")  # 600 × (365/12) ÷ 91

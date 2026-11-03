@@ -49,6 +49,8 @@ _READS = (
     "billing_days",
     "previous_reading",
     "present_reading",
+    "previous_reading_date",
+    "present_reading_date",
     "meter_multiplier",
     "bill_amount",
     "arrears",
@@ -71,6 +73,9 @@ class BillExtraction(BaseModel):
     previous_reading: DecimalRead = DecimalRead()
     present_reading: DecimalRead = DecimalRead()
     meter_multiplier: DecimalRead = DecimalRead()  # "MF"; units = (present − previous) × MF
+    # YYYY-MM-DD; the billing period is worked out from these when no day count is printed.
+    previous_reading_date: TextRead = TextRead()
+    present_reading_date: TextRead = TextRead()
     bill_amount: DecimalRead = DecimalRead()  # this period's charges, before arrears/adjustments
     arrears: DecimalRead = DecimalRead()
     total_due: DecimalRead = DecimalRead()  # payable incl. arrears: never used as the bill
