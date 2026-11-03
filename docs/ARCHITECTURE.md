@@ -839,7 +839,7 @@ Homeowner signs up through the lead form → uploads a synthetic bill → extrac
 | A-13 | Savings model simplifications | No degradation, no escalation, average rate | Simple, explainable estimate | No (documented) | No |
 | A-14 | Roof types | RCC flat, metal sheet, tiled, other | Form needs options | Code enum | Yes |
 | A-15 | Extra Low-score reasons | Roof < 1 kW, usage unknown | Brief names only tenant and small bill | Yes (toggle) | Yes |
-| A-16 | Photo quality thresholds | 700 px short side (receipt shape h ≥ 2.2 w: 320 px short, 900 px long), brightness 40–235, edge variance measured without enlarging | Re-upload trigger; narrow thermal receipts are readable | Yes (env/settings) | No |
+| A-16 | Photo quality thresholds | 700 px short side (receipt shape h ≥ 2.2 w: 200 px short, 600 px long), brightness 40–235, edge variance measured without enlarging | Re-upload trigger; narrow thermal receipts are readable | Yes (env/settings) | No |
 | A-17 | HEIC not accepted | — | iOS converts to JPEG for web | No | No |
 | A-18 | Consumer number format check | Digits only, 9–15 (soft flag) | Exact DISCOM format not given | Yes | Yes |
 | A-19 | Subsidy eligibility | Residential segment only | Brief says "central residential scheme" | Yes (rule segment) | **Yes** |

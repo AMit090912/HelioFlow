@@ -230,3 +230,15 @@ def test_blurred_receipt_is_still_blurry():
 def test_small_squat_image_is_still_too_small():
     q = check_quality(normalise_image(_receipt(width=360, height=500)).jpeg)
     assert "too_small" in q.reasons
+
+
+def test_narrow_sharp_receipt_photo_like_the_users_passes():
+    """User report: a clear 312-px-wide receipt photo (sharpness 7,526) was refused as too small."""
+    q = check_quality(normalise_image(_receipt(width=312, height=1000)).jpeg)
+    assert q.ok, q
+    assert check_quality(normalise_image(_receipt(width=274, height=900)).jpeg).ok
+
+
+def test_thumbnail_receipt_is_still_too_small():
+    q = check_quality(normalise_image(_receipt(width=150, height=480)).jpeg)
+    assert "too_small" in q.reasons
