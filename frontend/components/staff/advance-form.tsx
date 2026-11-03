@@ -10,7 +10,7 @@ import { Input } from "@/components/ui/input";
 import { Link } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api";
 import { formatRupees, parseDecimalInput } from "@/lib/format";
-import { useRecordAdvance, type ProjectDetail } from "@/lib/projects";
+import { useProjects, useRecordAdvance, type ProjectDetail } from "@/lib/projects";
 import { focusOption, useQuote } from "@/lib/quotes";
 import type { StaffLeadDetail } from "@/lib/staff";
 
@@ -19,6 +19,7 @@ export function AdvanceForm({ lead }: { lead: StaffLeadDetail }) {
   const accepted = lead.quotes.find((q) => q.status === "accepted");
   const { data: quote } = useQuote(accepted?.id ?? "", !!accepted);
   const record = useRecordAdvance(lead.id);
+  const { data: projects } = useProjects();
   const [amount, setAmount] = useState("");
   const [error, setError] = useState<string | null>(null);
   const [created, setCreated] = useState<{ project: ProjectDetail; token: string } | null>(null);
@@ -29,11 +30,14 @@ export function AdvanceForm({ lead }: { lead: StaffLeadDetail }) {
         <p role="status" className="text-sm font-medium text-teal">
           Advance recorded. The project has started and the homeowner was told (simulated).
         </p>
-        <LiveProjectPanel id={created.project.id} freshToken={created.token} homeownerLocale={lead.homeowner.preferred_locale} />
+        <LiveProjectPanel id={created.project.id} freshToken={created.token} homeownerLocale={lead.homeowner.preferred_locale} onLeadPage />
       </div>
     );
   }
   if (lead.status === "converted") {
+    // The stage controls live here too, so the lead's next step can be done on the lead's page.
+    const project = projects?.find((p) => p.lead_id === lead.id);
+    if (project) return <LiveProjectPanel id={project.id} homeownerLocale={lead.homeowner.preferred_locale} onLeadPage />;
     return (
       <Link
         href={{ pathname: "/staff/projects", query: { lead: lead.id } }}

@@ -1,17 +1,19 @@
 "use client";
 
-import { ChevronRight } from "lucide-react";
+import { ChevronRight, Clock } from "lucide-react";
 import { useTranslations } from "next-intl";
-import { useState } from "react";
+import { useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/empty-state";
 import { SpotEmptyInbox } from "@/components/illustrations/spot";
-import { age, FLAG_LABEL, NEXT_ACTION_LABEL, reasonText, STATUS_LABEL } from "@/components/staff/copy";
+import { age, FLAG_LABEL, reasonText, STATUS_LABEL } from "@/components/staff/copy";
+import { nextStep, type NextStep } from "@/components/staff/next-step";
 import { FlagChip, ScoreBadge } from "@/components/staff/score-badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api";
+import { useProjects, type Stage } from "@/lib/projects";
 import { useStaffLeads, type InboxFilters, type StaffLeadRow } from "@/lib/staff";
 import { cn } from "@/lib/utils";
 
@@ -20,12 +22,31 @@ const SCORES: { value: InboxFilters["score"]; label: string }[] = [
   { value: "high", label: "High" },
   { value: "low", label: "Low" },
 ];
+type Who = "you" | "homeowner" | "all";
+const WHO: { value: Who; label: string }[] = [
+  { value: "you", label: "Your move" },
+  { value: "homeowner", label: "Waiting on homeowner" },
+  { value: "all", label: "All" },
+];
+type Row = StaffLeadRow & { next: NextStep };
+
 const STATUSES = ["survey_pending", "call_pending", "surveyed", "quoted", "accepted", "bill_review", "draft", "closed_lost"];
 
 export default function LeadsInboxPage() {
   const t = useTranslations("staff");
   const [filters, setFilters] = useState<InboxFilters>({});
-  const { data: leads, error, isPending, isPlaceholderData, refetch } = useStaffLeads(filters);
+  const { data: rawLeads, error, isPending, isPlaceholderData, refetch } = useStaffLeads(filters);
+  const { data: projects } = useProjects();
+  const [who, setWho] = useState<Who>("you");
+
+  // Each lead's next step; a started project's stage decides what "move it on" means.
+  const rows = useMemo<Row[] | undefined>(() => {
+    if (!rawLeads) return undefined;
+    const stageOf = new Map<string, Stage>((projects ?? []).map((p) => [p.lead_id, p.stage]));
+    return rawLeads.map((l) => ({ ...l, next: nextStep(l, stageOf.get(l.id)) }));
+  }, [rawLeads, projects]);
+  const count = (w: Who) => (rows ?? []).filter((r) => w === "all" || r.next.owner === w).length;
+  const leads = rows?.filter((r) => who === "all" || r.next.owner === who);
 
   return (
     <div className="space-y-6">
@@ -35,6 +56,32 @@ export default function LeadsInboxPage() {
       </div>
 
       <div className="flex flex-wrap items-center gap-3">
+        <div role="group" aria-label="Whose move" className="flex rounded-xl border border-border bg-background p-1">
+          {WHO.map((w) => (
+            <button
+              key={w.value}
+              type="button"
+              aria-pressed={who === w.value}
+              onClick={() => setWho(w.value)}
+              className={cn(
+                "inline-flex h-9 items-center gap-2 rounded-lg px-3 text-sm font-medium",
+                who === w.value ? "bg-night text-white" : "text-ink-2 hover:bg-surface",
+              )}
+            >
+              {w.label}
+              {rows ? (
+                <span
+                  className={cn(
+                    "rounded-full px-1.5 text-[0.75rem] tabular",
+                    who === w.value ? "bg-gold text-night" : "bg-surface text-ink-2",
+                  )}
+                >
+                  {count(w.value)}
+                </span>
+              ) : null}
+            </button>
+          ))}
+        </div>
         <div role="group" aria-label="Score" className="flex rounded-xl border border-border bg-background p-1">
           {SCORES.map((s) => (
             <button
@@ -87,11 +134,23 @@ export default function LeadsInboxPage() {
           ))}
         </div>
       ) : leads && leads.length === 0 ? (
-        <EmptyState
-          illustration={<SpotEmptyInbox className="w-full" />}
-          title={t("leadsEmptyTitle")}
-          message={t("leadsEmpty")}
-        />
+        rows && rows.length > 0 ? (
+          <EmptyState
+            illustration={<SpotEmptyInbox className="w-full" />}
+            title={who === "you" ? "Nothing waiting on you" : "Nobody to wait on"}
+            message={
+              who === "you"
+                ? "Every open lead is with the homeowner for now. Check Waiting on homeowner if someone needs a nudge."
+                : "No lead is waiting on a homeowner right now."
+            }
+          />
+        ) : (
+          <EmptyState
+            illustration={<SpotEmptyInbox className="w-full" />}
+            title={t("leadsEmptyTitle")}
+            message={t("leadsEmpty")}
+          />
+        )
       ) : leads ? (
         <div className={cn("transition-opacity", isPlaceholderData && "opacity-60")}>
           <LeadTable leads={leads} />
@@ -129,7 +188,7 @@ function Flags({ lead }: { lead: StaffLeadRow }) {
   );
 }
 
-function LeadTable({ leads }: { leads: StaffLeadRow[] }) {
+function LeadTable({ leads }: { leads: Row[] }) {
   return (
     <div className="hidden overflow-hidden rounded-2xl border border-border bg-background md:block">
       <table className="w-full text-left text-[0.9375rem]">
@@ -139,7 +198,7 @@ function LeadTable({ leads }: { leads: StaffLeadRow[] }) {
             <th className="px-4 py-3 font-medium">Score</th>
             <th className="px-4 py-3 font-medium">Why</th>
             <th className="px-4 py-3 font-medium">Size</th>
-            <th className="px-4 py-3 font-medium">Next</th>
+            <th className="px-4 py-3 font-medium">Next step</th>
             <th className="px-4 py-3 font-medium">Received</th>
             <th className="w-10" />
           </tr>
@@ -170,7 +229,9 @@ function LeadTable({ leads }: { leads: StaffLeadRow[] }) {
               <td className="px-4 py-3.5">
                 <SizeCell lead={lead} />
               </td>
-              <td className="px-4 py-3.5 text-ink">{lead.next_action ? NEXT_ACTION_LABEL[lead.next_action] : "—"}</td>
+              <td className="px-4 py-3.5">
+                <NextCell next={lead.next} />
+              </td>
               <td className="px-4 py-3.5 text-ink-2">{age(lead.created_at)}</td>
               <td className="px-2 py-3.5 text-ink-2">
                 <ChevronRight className="size-4" aria-hidden />
@@ -183,7 +244,7 @@ function LeadTable({ leads }: { leads: StaffLeadRow[] }) {
   );
 }
 
-function LeadCard({ lead }: { lead: StaffLeadRow }) {
+function LeadCard({ lead }: { lead: Row }) {
   return (
     <Link
       href={`/staff/leads/${lead.id}`}
@@ -203,11 +264,22 @@ function LeadCard({ lead }: { lead: StaffLeadRow }) {
       </p>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
         <SizeCell lead={lead} />
-        <span className="font-medium text-teal">{lead.next_action ? NEXT_ACTION_LABEL[lead.next_action] : ""}</span>
+        <NextCell next={lead.next} />
       </div>
       <div className="mt-2">
         <Flags lead={lead} />
       </div>
     </Link>
+  );
+}
+
+/** The task itself when it is the team's move; who it is waiting on otherwise. */
+function NextCell({ next }: { next: NextStep }) {
+  if (next.owner === "you") return <span className="font-semibold text-teal">{next.title}</span>;
+  return (
+    <span className="inline-flex items-start gap-1.5 text-ink-2">
+      {next.owner === "homeowner" ? <Clock className="mt-0.5 size-3.5 shrink-0" aria-hidden /> : null}
+      {next.title}
+    </span>
   );
 }

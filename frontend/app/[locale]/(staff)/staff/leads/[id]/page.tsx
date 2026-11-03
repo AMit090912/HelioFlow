@@ -1,12 +1,14 @@
 "use client";
 
-import { ArrowLeft, Phone } from "lucide-react";
+import { ArrowLeft, Check, ChevronDown, Phone } from "lucide-react";
 import { use, type ReactNode } from "react";
 
 import { AdvanceForm } from "@/components/staff/advance-form";
 import { BillCompare } from "@/components/staff/bill-compare";
 import { FLAG_LABEL, NEXT_ACTION_LABEL, reasonText, STATUS_LABEL, when } from "@/components/staff/copy";
 import { LeadActions } from "@/components/staff/lead-actions";
+import { nextStep, type SectionId } from "@/components/staff/next-step";
+import { NextStepCard } from "@/components/staff/next-step-card";
 import { QuoteBuilder } from "@/components/staff/quote-builder";
 import { FlagChip, ScoreBadge } from "@/components/staff/score-badge";
 import { VerificationForm } from "@/components/staff/verification-form";
@@ -15,7 +17,9 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api";
 import { formatRupees } from "@/lib/format";
+import { useProjects } from "@/lib/projects";
 import { useStaffLead, type StaffLeadDetail } from "@/lib/staff";
+import { cn } from "@/lib/utils";
 
 const ROOF_LABEL: Record<string, string> = { rcc_flat: "Flat RCC", metal_sheet: "Metal sheet", tiled: "Tiled", other: "Other" };
 const EVENT_LABEL: Record<string, string> = {
@@ -57,11 +61,68 @@ export default function StaffLeadPage({ params }: { params: Promise<{ id: string
   );
 }
 
-function Section({ title, children, aside }: { title: string; children: ReactNode; aside?: ReactNode }) {
+type SectionState = "now" | "done" | undefined;
+
+function Section({
+  id,
+  title,
+  children,
+  aside,
+  state,
+}: {
+  id?: SectionId;
+  title: string;
+  children: ReactNode;
+  aside?: ReactNode;
+  state?: SectionState;
+}) {
+  const shell = cn(
+    "scroll-mt-6 rounded-2xl border bg-background outline-none",
+    state === "now" ? "border-gold shadow-[0_0_0_3px_rgba(229,178,87,0.25)]" : "border-border",
+  );
+  const heading = (
+    <h2 id={id ? `section-${id}-title` : undefined} className="flex items-center gap-2 font-display text-xl font-semibold text-ink">
+      {title}
+      {state === "now" ? (
+        <span className="rounded-full bg-gold px-2.5 py-0.5 font-sans text-[0.75rem] font-semibold text-night">Do this now</span>
+      ) : state === "done" ? (
+        <span className="inline-flex items-center gap-1 rounded-full bg-teal-wash px-2.5 py-0.5 font-sans text-[0.75rem] font-medium text-teal">
+          <Check className="size-3" aria-hidden /> Done
+        </span>
+      ) : null}
+    </h2>
+  );
+  const common = {
+    id: id ? `section-${id}` : undefined,
+    tabIndex: id ? -1 : undefined,
+    "aria-labelledby": id ? `section-${id}-title` : undefined,
+  };
+
+  // Finished steps fold away (still one click to check or correct), so the page leads with what is left.
+  if (state === "done") {
+    return (
+      <section {...common} className={shell}>
+        <details className="group">
+          <summary className="flex min-h-11 cursor-pointer list-none items-center justify-between gap-3 rounded-2xl p-5 hover:bg-surface/40 sm:px-6 [&::-webkit-details-marker]:hidden">
+            {heading}
+            <span className="inline-flex items-center gap-1 text-sm font-medium text-teal">
+              <span className="group-open:hidden">Show</span>
+              <span className="hidden group-open:inline">Hide</span>
+              <ChevronDown className="size-4 transition-transform group-open:rotate-180" aria-hidden />
+            </span>
+          </summary>
+          <div className="px-5 pb-5 sm:px-6 sm:pb-6">
+            {aside ? <div className="mb-3">{aside}</div> : null}
+            {children}
+          </div>
+        </details>
+      </section>
+    );
+  }
   return (
-    <section className="rounded-2xl border border-border bg-background p-5 sm:p-6">
+    <section {...common} className={cn(shell, "p-5 sm:p-6")}>
       <div className="mb-4 flex flex-wrap items-baseline justify-between gap-2">
-        <h2 className="font-display text-xl font-semibold text-ink">{title}</h2>
+        {heading}
         {aside}
       </div>
       {children}
@@ -69,7 +130,19 @@ function Section({ title, children, aside }: { title: string; children: ReactNod
   );
 }
 
+/** Where each section sits in the work order; a section is done once the lead has moved past it. */
+const SECTION_ORDER: SectionId[] = ["bill", "roof", "quote", "project"];
+
 function LeadView({ lead }: { lead: StaffLeadDetail }) {
+  // A started project's stage decides its next step; the list is small and already cached.
+  const { data: projects } = useProjects();
+  const stage = lead.status === "converted" ? (projects?.find((p) => p.lead_id === lead.id)?.stage ?? null) : null;
+  const next = nextStep(lead, stage);
+  const current = next.owner === "you" ? next.section : undefined;
+  const reached = next.section ? SECTION_ORDER.indexOf(next.section) : -1;
+  const stateOf = (id: SectionId): SectionState =>
+    id === current ? "now" : next.step === "done" || SECTION_ORDER.indexOf(id) < reached ? "done" : undefined;
+
   return (
     <>
       <header className="flex flex-wrap items-start justify-between gap-4">
@@ -81,7 +154,9 @@ function LeadView({ lead }: { lead: StaffLeadDetail }) {
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
             <ScoreBadge score={lead.score} />
             <span className="rounded-full bg-surface px-2.5 py-0.5 text-ink">{STATUS_LABEL[lead.status] ?? lead.status}</span>
-            {lead.next_action ? <span className="text-ink-2">Next: {NEXT_ACTION_LABEL[lead.next_action]}</span> : null}
+            {lead.next_action && next.step === "check" ? (
+              <span className="text-ink-2">Suggested check: {NEXT_ACTION_LABEL[lead.next_action]}</span>
+            ) : null}
           </div>
         </div>
         <div className="flex flex-col items-start gap-1 text-sm sm:items-end">
@@ -95,26 +170,32 @@ function LeadView({ lead }: { lead: StaffLeadDetail }) {
         </div>
       </header>
 
+      <NextStepCard next={next} phone={lead.homeowner.phone} />
+
       {lead.seed_note ? <p className="rounded-xl bg-surface px-4 py-2.5 text-sm text-ink-2">Seed data: {lead.seed_note}</p> : null}
 
       <div className="grid gap-6 xl:grid-cols-[minmax(0,1.4fr)_minmax(0,1fr)]">
+        {/* Top to bottom in the order the work happens. */}
         <div className="space-y-6">
-          <Section title="Bill">
+          <Section id="bill" title="Bill" state={stateOf("bill")}>
             {lead.current_reading ? (
               <BillCompare reading={lead.current_reading} />
             ) : (
               <p className="text-ink-2">The homeowner hasn&apos;t confirmed a bill yet.</p>
             )}
           </Section>
+          <Section id="roof" title="Roof and load" state={stateOf("roof")}>
+            <VerificationForm key={lead.roof_verified_at ?? "new"} lead={lead} />
+          </Section>
+          <Section id="quote" title="Quote builder" state={stateOf("quote")} aside={<span className="text-sm text-ink-2">Prices are GST-inclusive</span>}>
+            <QuoteBuilder lead={lead} />
+          </Section>
           {lead.status === "accepted" || lead.status === "converted" ? (
-            <Section title="Project">
+            <Section id="project" title="Project" state={stateOf("project")}>
               {/* Stays mounted across the accepted → converted refetch so the one-time link stays visible. */}
               <AdvanceForm lead={lead} />
             </Section>
           ) : null}
-          <Section title="Quote builder" aside={<span className="text-sm text-ink-2">Prices are GST-inclusive</span>}>
-            <QuoteBuilder lead={lead} />
-          </Section>
         </div>
         <div className="space-y-6">
           <Section title="Why this score">
@@ -150,9 +231,6 @@ function LeadView({ lead }: { lead: StaffLeadDetail }) {
                 ))}
               </div>
             ) : null}
-          </Section>
-          <Section title="Roof and load">
-            <VerificationForm key={lead.roof_verified_at ?? "new"} lead={lead} />
           </Section>
           <Section title="Actions">
             <LeadActions lead={lead} />

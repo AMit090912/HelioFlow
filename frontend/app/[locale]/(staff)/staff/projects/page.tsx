@@ -7,6 +7,7 @@ import { Suspense, useMemo, useState } from "react";
 import { EmptyState } from "@/components/empty-state";
 import { SpotEmptyInbox } from "@/components/illustrations/spot";
 import { STAGE_LABEL } from "@/components/staff/copy";
+import { nextStageOf } from "@/components/staff/next-step";
 import { LiveProjectPanel } from "@/components/staff/project-panel";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -100,8 +101,14 @@ function Row({ project, active, onPick }: { project: ProjectRow; active: boolean
           {project.code} · {project.selected_kw} kW
         </p>
         <p className="text-[0.8125rem] text-ink sm:hidden">{STAGE_LABEL[project.stage]}</p>
+        <div className="sm:hidden">
+          <NextMove project={project} />
+        </div>
       </td>
-      <td className="hidden px-4 py-3 text-ink sm:table-cell">{STAGE_LABEL[project.stage]}</td>
+      <td className="hidden px-4 py-3 sm:table-cell">
+        <p className="text-ink">{STAGE_LABEL[project.stage]}</p>
+        <NextMove project={project} />
+      </td>
       <td className="px-4 py-3 tabular">
         <span className={cn(stuck ? "rounded-md bg-attention-bg px-2 py-0.5 text-attention" : "text-ink")}>
           {project.days_in_stage} {project.days_in_stage === 1 ? "day" : "days"}
@@ -115,4 +122,14 @@ function SelectedProject({ id }: { id: string }) {
   const { data: project } = useProject(id);
   if (!project) return <Skeleton className="h-64 w-full rounded-xl" />;
   return <LiveProjectPanel key={id} id={id} homeownerLocale={project.homeowner_locale} />;
+}
+
+/** What to do next on the project, in the same words as the lead page. */
+function NextMove({ project }: { project: ProjectRow }) {
+  const next = nextStageOf(project.stage);
+  return next ? (
+    <p className="text-[0.8125rem] font-semibold text-teal">Next: move to {STAGE_LABEL[next]}</p>
+  ) : (
+    <p className="text-[0.8125rem] text-ink-2">All done</p>
+  );
 }

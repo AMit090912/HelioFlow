@@ -25,10 +25,13 @@ export function ProjectPanel({
   project,
   freshToken,
   homeownerLocale,
+  onLeadPage = false,
 }: {
   project: ProjectDetail;
   freshToken?: string | null;
   homeownerLocale: string;
+  /** Shown inside the lead's own page: skip the name and the link back to it. */
+  onLeadPage?: boolean;
 }) {
   const move = useMoveStage(project.id);
   const index = STAGES.indexOf(project.stage);
@@ -53,20 +56,26 @@ export function ProjectPanel({
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <p className="text-sm text-ink-2 tabular">
-            {project.code} · {project.selected_kw} kW
-          </p>
-          <h2 className="font-display text-2xl font-semibold text-ink">{project.homeowner_name}</h2>
-          <p className="text-sm text-ink-2 tabular">
-            Advance {formatRupees(project.advance_amount, "en")} · {project.advance_reference}
-          </p>
+      {onLeadPage ? (
+        <p className="text-sm text-ink-2 tabular">
+          {project.selected_kw} kW · Advance {formatRupees(project.advance_amount, "en")} · {project.advance_reference}
+        </p>
+      ) : (
+        <div className="flex flex-wrap items-start justify-between gap-3">
+          <div>
+            <p className="text-sm text-ink-2 tabular">
+              {project.code} · {project.selected_kw} kW
+            </p>
+            <h2 className="font-display text-2xl font-semibold text-ink">{project.homeowner_name}</h2>
+            <p className="text-sm text-ink-2 tabular">
+              Advance {formatRupees(project.advance_amount, "en")} · {project.advance_reference}
+            </p>
+          </div>
+          <Link href={`/staff/leads/${project.lead_id}`} className="inline-flex min-h-11 items-center text-sm font-medium text-teal hover:underline">
+            Open lead
+          </Link>
         </div>
-        <Link href={`/staff/leads/${project.lead_id}`} className="inline-flex min-h-11 items-center text-sm font-medium text-teal hover:underline">
-          Open lead
-        </Link>
-      </div>
+      )}
 
       <ol className="space-y-0">
         {project.stages.map((s, i) => {
@@ -214,13 +223,15 @@ export function LiveProjectPanel({
   id,
   freshToken,
   homeownerLocale,
+  onLeadPage,
 }: {
   id: string;
   freshToken?: string | null;
   homeownerLocale: string;
+  onLeadPage?: boolean;
 }) {
   const { data, error } = useProject(id);
   if (error && !data) return <p role="alert" className="text-sm text-destructive">Couldn&apos;t load this project.</p>;
   if (!data) return <Loader2 className="size-5 animate-spin text-ink-2" aria-label="Loading" />;
-  return <ProjectPanel project={data} freshToken={freshToken} homeownerLocale={homeownerLocale} />;
+  return <ProjectPanel project={data} freshToken={freshToken} homeownerLocale={homeownerLocale} onLeadPage={onLeadPage} />;
 }
