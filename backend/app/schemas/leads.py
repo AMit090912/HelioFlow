@@ -5,7 +5,7 @@ from typing import Literal
 
 from pydantic import BaseModel, ConfigDict, Field, field_serializer
 
-from app.models import BillReading, Lead
+from app.models import BillReading, Lead, Quote
 from app.schemas.bills import plain
 
 CONSENT_VERSION = "2026-11-v1"
@@ -30,6 +30,11 @@ class ReadingRef(BaseModel):
     status: str
 
 
+class QuoteRef(BaseModel):
+    id: uuid.UUID
+    status: str
+
+
 class LeadMine(BaseModel):
     """What a homeowner sees about their own lead. The score and its reasons are staff-only:
     a homeowner is never shown "Low" (§2), only their next step."""
@@ -48,6 +53,7 @@ class LeadMine(BaseModel):
     recommendation_status: Literal["provisional", "final"] | None
     current_reading: ReadingRef | None
     latest_reading: ReadingRef | None
+    current_quote: QuoteRef | None = None
     created_at: datetime
 
     @field_serializer("roof_area_sqft", "declared_monthly_bill", "recommended_kw")
@@ -55,7 +61,7 @@ class LeadMine(BaseModel):
         return plain(value)
 
     @classmethod
-    def of(cls, lead: Lead, latest: BillReading | None) -> "LeadMine":
+    def of(cls, lead: Lead, latest: BillReading | None, quote: Quote | None = None) -> "LeadMine":
         detail = lead.sizing_detail or {}
         current = None
         if lead.current_bill_reading_id is not None:
@@ -77,5 +83,8 @@ class LeadMine(BaseModel):
             latest_reading=None
             if latest is None
             else ReadingRef(id=latest.id, status=latest.status.value),
+            current_quote=None
+            if quote is None
+            else QuoteRef(id=quote.id, status=quote.status.value),
             created_at=lead.created_at,
         )

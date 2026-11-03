@@ -28,6 +28,11 @@ class Lead(IdMixin, Base):
             "verified_roof_area_sqft IS NULL OR verified_roof_area_sqft > 0",
             name="verified_roof_positive",
         ),
+        CheckConstraint(
+            "verified_sanctioned_load_kw IS NULL OR "
+            "(verified_sanctioned_load_kw > 0 AND verified_sanctioned_load_kw <= 100)",
+            name="verified_load_range",
+        ),
         Index("ix_leads_inbox", "status", "score", text("created_at DESC")),
     )
 
@@ -69,6 +74,12 @@ class Lead(IdMixin, Base):
         UUID(as_uuid=True), ForeignKey("users.id")
     )
     roof_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
+    # Staff-entered sanctioned load from the DISCOM record; wins over the bill's value (§8).
+    verified_sanctioned_load_kw: Mapped[Decimal | None] = mapped_column(Numeric(5, 2))
+    load_verified_by: Mapped[uuid.UUID | None] = mapped_column(
+        UUID(as_uuid=True), ForeignKey("users.id", name="fk_leads_load_verified_by_users")
+    )
+    load_verified_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     survey_notes: Mapped[str | None] = mapped_column(Text)
     surveyed_at: Mapped[datetime | None] = mapped_column(DateTime(timezone=True))
     surveyed_by: Mapped[uuid.UUID | None] = mapped_column(

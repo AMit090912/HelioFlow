@@ -24,6 +24,7 @@ HOMEOWNER_LEADS = [
             "code": "LD-30881",
             "ownership": "owner",
             "declared_monthly_bill": Decimal("3200"),
+            "avg_monthly_units": Decimal("340"),
             "roof_area_sqft": Decimal("450"),
             "pincode": "440010",
         },
@@ -38,6 +39,7 @@ HOMEOWNER_LEADS = [
             "code": "LD-30902",
             "ownership": "tenant",
             "declared_monthly_bill": Decimal("1900"),
+            "avg_monthly_units": Decimal("210"),
             "roof_area_sqft": Decimal("300"),
             "pincode": "440022",
         },
@@ -52,6 +54,7 @@ HOMEOWNER_LEADS = [
             "code": "LD-30915",
             "ownership": "owner",
             "declared_monthly_bill": Decimal("650"),
+            "avg_monthly_units": Decimal("85"),
             "roof_area_sqft": Decimal("200"),
             "pincode": "440013",
         },
@@ -63,6 +66,13 @@ LEAD_SEED_NOTE = (
     "Ownership and monthly bill are from the brief."
 )
 CONSENT_VERSION = "2026-11-v1"
+# The brief gives units and bill but no bill image: the seeded reading is a typed-in (manual)
+# confirmation of exactly those two numbers, and its preview says so.
+SEED_READING_PREVIEW_TEXT = (
+    "Sample lead from the client brief",
+    "No bill image: units and bill amount",
+    "were typed in from the brief.",
+)
 
 # §3.7. Decimals are stored as strings so JSON never turns them into floats.
 SETTINGS = {
