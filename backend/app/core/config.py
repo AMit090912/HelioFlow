@@ -48,6 +48,17 @@ class Settings(BaseSettings):
             return cls.model_fields[info.field_name].default
         return value
 
+    @field_validator("database_url", "test_database_url", mode="before")
+    @classmethod
+    def _psycopg_driver(cls, value: object) -> object:
+        # Neon/Render hand out postgresql:// (or postgres://) URLs; SQLAlchemy would then look for
+        # psycopg2, which is not installed. Use psycopg 3 for any plain Postgres URL.
+        if isinstance(value, str):
+            for prefix in ("postgresql://", "postgres://"):
+                if value.startswith(prefix):
+                    return "postgresql+psycopg://" + value[len(prefix) :]
+        return value
+
     @model_validator(mode="after")
     def _production_secret(self) -> "Settings":
         # HS256 wants at least 32 bytes of key (RFC 7518 §3.2). Fail at startup, not at sign-in.

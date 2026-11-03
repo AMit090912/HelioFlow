@@ -805,11 +805,11 @@ Homeowner signs up through the lead form → uploads a synthetic bill → extrac
 | Part | Platform | Notes |
 |---|---|---|
 | Frontend | Vercel | `BACKEND_URL` used in `next.config` rewrites; security headers in config |
-| Backend | Render web service (Python) | Build: `pip install -r requirements.txt`. Start: `alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT` |
-| Database | Neon | First migration runs `CREATE EXTENSION IF NOT EXISTS citext` and `… btree_gist`; seed with `python -m seed` (idempotent) |
+| Backend | Render web service (Python), blueprint `render.yaml` | Build: `pip install uv && uv sync --frozen --no-dev`. Start: `alembic upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT`. Health check `/api/health` |
+| Database | Neon | First migration runs `CREATE EXTENSION IF NOT EXISTS citext` and `… btree_gist`; seed once from a developer machine with `DATABASE_URL=<neon> uv run python -m seed` (idempotent; Render's free tier has no shell). A pasted `postgresql://` URL is accepted (mapped to psycopg 3) |
 
 **Environment variable names**
-- Backend: `DATABASE_URL`, `JWT_SECRET`, `JWT_TTL_HOURS`, `FRONTEND_ORIGIN`, `COOKIE_SECURE`, `AI_MODE`, `GROQ_API_KEY`, `GROQ_VISION_MODEL`, `GROQ_TEXT_MODEL`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `AI_TIMEOUT_SECONDS`, `MAX_UPLOAD_MB`, `SEED_DEMO_PASSWORD`
+- Backend: `ENV`, `DATABASE_URL`, `JWT_SECRET` (at least 32 characters in production; the app refuses to start otherwise), `JWT_TTL_HOURS`, `FRONTEND_ORIGIN`, `COOKIE_SECURE`, `TRUST_PROXY_HEADERS`, `AI_MODE`, `GROQ_API_KEY`, `GROQ_VISION_MODEL`, `GROQ_TEXT_MODEL`, `GEMINI_API_KEY`, `GEMINI_MODEL`, `AI_TIMEOUT_SECONDS`, `MAX_UPLOAD_MB`, `DEMO_LOGINS`; `SEED_DEMO_PASSWORD` only where the seed runs
 - Frontend: `BACKEND_URL`
 
 **Cold starts:** Render's free tier sleeps after ~15 minutes idle, and the first request takes ~30–60 s. The frontend pings `/api/health` on load and shows a "Waking up the server…" state. Paying for Render Starter during the review removes this.

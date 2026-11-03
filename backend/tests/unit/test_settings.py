@@ -17,3 +17,17 @@ def test_production_needs_a_long_jwt_secret():
 
 def test_development_allows_a_short_secret():
     assert Settings(_env_file=None, env="development", jwt_secret="dev").jwt_secret == "dev"
+
+
+@pytest.mark.parametrize(
+    "given",
+    [
+        "postgresql://u:p@ep-x.neon.tech/helio?sslmode=require",
+        "postgres://u:p@ep-x.neon.tech/helio?sslmode=require",
+        "postgresql+psycopg://u:p@ep-x.neon.tech/helio?sslmode=require",
+    ],
+)
+def test_a_pasted_neon_url_uses_the_installed_driver(given):
+    """Neon hands out postgresql:// URLs; SQLAlchemy would pick psycopg2 (not installed)."""
+    url = Settings(_env_file=None, database_url=given).database_url
+    assert url == "postgresql+psycopg://u:p@ep-x.neon.tech/helio?sslmode=require"
