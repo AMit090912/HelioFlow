@@ -76,4 +76,4 @@ GitHub Actions runs all three on every push.
 
 - [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md): design, data model, AI pipeline, calculations,
   security, testing, and the numbered assumptions (A-…).
-- [docs/deployment.md](docs/deployment.md): local setup, tests, deployment, and known limitations.
+- [docs/deployment.md](docs/deployment.md): demo login details, local setup, tests, deployment, environment variables and known limitations.
