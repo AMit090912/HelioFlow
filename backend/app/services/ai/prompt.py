@@ -1,7 +1,7 @@
 """Bill-reading prompt. Bump PROMPT_VERSION on any change: it is stored with every reading.
 
 bill-v2: Indian spot-bill receipts (e.g. TSSPDCL "bill-cum-notice"), multi-month billing periods,
-meter readings, arrears vs this period's charges, masked numbers, and non-Indian bills.
+meter readings, arrears vs this period's charges, and masked numbers.
 Only values the calculations need are read (§7–§10); the extra fields exist to get those right.
 """
 
@@ -15,7 +15,6 @@ Return exactly this JSON object and nothing else. Every field must be an object 
 "confidence" (use {"value": null, "confidence": 0} when not shown — never a bare null):
 {
   "is_electricity_bill": true | false,
-  "is_indian_bill": true | false,
   "legibility": "good" | "fair" | "poor",
   "consumer_number":    {"value": string | null, "confidence": 0..1},
   "tariff_category":    {"value": string | null, "confidence": 0..1},
@@ -59,8 +58,6 @@ Rules:
 - Use null when a value is not clearly visible. Never guess, compute or invent a value.
 - confidence is how sure you are that the value is printed exactly like that (1 = certain).
 - Amounts are numbers in rupees without commas or currency signs.
-- is_indian_bill is false when the bill was issued outside India (for example in pesos, PHP, a
-  Philippine electric cooperative, or any non-Indian utility). Indian bills use ₹/Rs/INR.
 - If the document is not an electricity bill, set is_electricity_bill to false.
 - If the image is too blurred, dark or cropped to read the units or amount, set legibility to
   "poor". Faded thermal print that is still readable is "fair".

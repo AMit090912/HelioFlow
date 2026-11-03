@@ -393,7 +393,6 @@ The model's own `legibility = poor` or `is_electricity_bill = false` also leads 
   "current_units":      {"value": "integer|null", "confidence": 0.0},
   "bill_amount":        {"value": "number|null", "confidence": 0.0},
   "fixed_charge":       {"value": "number|null", "confidence": 0.0},
-  "is_indian_bill":     true,
   "billing_days":       {"value": "integer|null", "confidence": 0.0},
   "previous_reading":   {"value": "number|null", "confidence": 0.0},
   "present_reading":    {"value": "number|null", "confidence": 0.0},
@@ -410,9 +409,8 @@ The prompt instructs the model to return `null` when a value is not visible and 
 - `billing_days` lets a multi-month bill be converted to an average month **[A-30]**: units, bill and fixed charge are each × (365/12) ÷ days. Example: 1,737 units over 93 days → 568.1 units/month.
 - `previous_reading`/`present_reading`/`meter_multiplier` cross-check the units (flag `units_mismatch_readings`) and supply them when they aren't printed.
 - Labels it maps include: USC / SC.NO → consumer number; CONTRACTED LOAD → sanctioned load; CAT → tariff; CUST CHARGES → fixed charge.
-- `is_indian_bill: false` (e.g. a Philippine cooperative bill) sends the homeowner to re-upload (`not_indian_bill`).
 - A provider answering `"field": null` instead of `{"value": null}` is accepted (Gemini does this).
-- Live-checked on the user's sample bills (Groq and Gemini): every calculation input read correctly, masked consumer numbers returned as null, and the foreign bill rejected.
+- Live-checked on the user's sample bills (Groq and Gemini): every calculation input read correctly, and masked consumer numbers returned as null.
 
 ### 6.2 Provider chain
 

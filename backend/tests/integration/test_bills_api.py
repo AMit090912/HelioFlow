@@ -490,19 +490,3 @@ def test_multi_month_bill_is_confirmed_per_month(client, db_session, ai):
     assert confirmed["confirmed"]["avg_monthly_units"] == "568.1"
     assert confirmed["confirmed"]["bill_amount"] == "4211.84"
     assert confirmed["confirmed"]["fixed_charge_monthly"] == "78.49"
-
-
-def test_foreign_bill_asks_for_a_new_upload(client, db_session, ai):
-    from tests.unit.ai.test_receipt_bills import SPOT_93_DAYS
-
-    ai["providers"] = [Scripted("groq", {**SPOT_93_DAYS, "is_indian_bill": False})]
-    owner, lead = make_owner(db_session, "cebu@example.com")
-    sign_in(client, "cebu@example.com")
-    up = client.post(
-        f"/api/leads/{lead.id}/bills",
-        headers=CSRF,
-        files={"file": ("bill.jpg", (BILLS / "clear.jpg").read_bytes())},
-    ).json()
-    reading = client.get(f"/api/bills/{up['id']}").json()
-    assert reading["status"] == "needs_reupload"
-    assert "not_indian_bill" in reading["flags"]["document"]

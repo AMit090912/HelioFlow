@@ -230,7 +230,7 @@ def process_reading(
             reading.validation_flags = flags
             reading.provider, reading.model = result.provider, result.model
             reading.prompt_version = attempts[-1]["prompt_version"]
-            unreadable = {"not_electricity_bill", "not_indian_bill", "legibility_poor"} & set(
+            unreadable = {"not_electricity_bill", "legibility_poor"} & set(
                 flags.get("document", [])
             )
             reading.status = (

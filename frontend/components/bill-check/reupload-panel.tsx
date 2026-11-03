@@ -11,7 +11,6 @@ const KNOWN = [
   "too_bright",
   "blurry",
   "not_electricity_bill",
-  "not_indian_bill",
   "legibility_poor",
 ] as const;
 type Reason = (typeof KNOWN)[number];

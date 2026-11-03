@@ -1,5 +1,5 @@
 """Receipt-style Indian spot bills (e.g. TSSPDCL "bill-cum-notice"): multi-month periods, meter
-readings, arrears, customer charges, foreign bills, and nulls from providers (§6.1, §6.3)."""
+readings, arrears, customer charges, and nulls from providers (§6.1, §6.3)."""
 
 from decimal import Decimal as D
 
@@ -9,7 +9,6 @@ from app.services.ai.validation import monthly_figures, suggested_average_units
 # Values printed on the user's sample TSSPDCL bill (93-day period, Malkajgiri).
 SPOT_93_DAYS = {
     "is_electricity_bill": True,
-    "is_indian_bill": True,
     "legibility": "fair",
     "consumer_number": {"value": None, "confidence": 0},  # masked on the photo
     "tariff_category": {"value": "1B(ii) DOMESTIC", "confidence": 0.95},
@@ -46,7 +45,7 @@ def test_providers_may_write_null_for_a_whole_field():
         }
     )
     assert e.bill_amount.value is None and e.monthly_units.value is None
-    assert e.current_units.value == 196 and e.is_indian_bill is None
+    assert e.current_units.value == 196
 
 
 def test_older_readings_without_new_fields_still_parse():
@@ -144,8 +143,3 @@ def test_masked_consumer_number_is_unusual():
         spot(consumer_number={"value": "000000000000", "confidence": 0.9}), declared_bill=None
     )
     assert "format_unusual" in flags["consumer_number"]
-
-
-def test_foreign_bill_is_flagged_for_reupload():
-    flags = sanity_flags(spot(is_indian_bill=False), declared_bill=None)
-    assert "not_indian_bill" in flags["document"]

@@ -303,8 +303,7 @@
         "too_bright": "The photo is washed out. Avoid direct light or flash on the bill.",
         "blurry": "The photo is blurry. Hold the phone steady and tap to focus.",
         "not_electricity_bill": "This doesn't look like an electricity bill.",
-        "legibility_poor": "The text on the bill is hard to read.",
-        "not_indian_bill": "This doesn't look like an Indian electricity bill. Please upload a bill from your electricity company in India."
+        "legibility_poor": "The text on the bill is hard to read."
       },
       "cta": "Upload a new photo",
       "orType": "Or type the values in yourself"

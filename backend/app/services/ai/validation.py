@@ -114,8 +114,6 @@ def sanity_flags(e: BillExtraction, declared_bill: Decimal | None) -> dict[str, 
     flags: dict[str, list[str]] = {}
     if not e.is_electricity_bill:
         _add(flags, "document", "not_electricity_bill")
-    if e.is_indian_bill is False:
-        _add(flags, "document", "not_indian_bill")
     if e.legibility == "poor":
         _add(flags, "document", "legibility_poor")
 

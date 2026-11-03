@@ -61,8 +61,6 @@ class BillExtraction(BaseModel):
     model_config = ConfigDict(extra="ignore", frozen=True)
 
     is_electricity_bill: bool
-    # False for bills issued outside India (e.g. a Philippine cooperative); None = not stated.
-    is_indian_bill: bool | None = None
     legibility: Literal["good", "fair", "poor"]
     consumer_number: TextRead = TextRead()
     tariff_category: TextRead = TextRead()
