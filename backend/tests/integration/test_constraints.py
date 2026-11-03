@@ -99,8 +99,12 @@ def test_bill_reading_unique_per_file(db_session: Session):
     owner = make_user(db_session)
     lead = make_lead(db_session, owner)
     f = BillFile(
-        lead_id=lead.id, kind=BillKind.image, mime="image/jpeg", size_bytes=10,
-        sha256="a" * 64, content=b"x",
+        lead_id=lead.id,
+        kind=BillKind.image,
+        mime="image/jpeg",
+        size_bytes=10,
+        sha256="a" * 64,
+        content=b"x",
     )
     db_session.add(f)
     db_session.flush()
@@ -114,8 +118,12 @@ def test_bill_reading_unique_per_file(db_session: Session):
 
 def _price(min_kw: str, max_kw: str, start: date, end: date | None) -> PriceRule:
     return PriceRule(
-        min_kw=Decimal(min_kw), max_kw=Decimal(max_kw), price_per_kw=Decimal("60000"),
-        gst_inclusive=True, effective_from=start, effective_to=end,
+        min_kw=Decimal(min_kw),
+        max_kw=Decimal(max_kw),
+        price_per_kw=Decimal("60000"),
+        gst_inclusive=True,
+        effective_from=start,
+        effective_to=end,
     )
 
 
@@ -133,9 +141,12 @@ def test_price_rule_overlap_rejected(db_session: Session):
 
 def _subsidy(scheme: str, start: date, end: date | None) -> SubsidyRule:
     return SubsidyRule(
-        scheme_code=scheme, segment=SubsidySegment.residential,
+        scheme_code=scheme,
+        segment=SubsidySegment.residential,
         slabs=[{"from_kw": "0", "to_kw": "2", "amount_per_kw": "30000"}],
-        cap_amount=Decimal("78000"), effective_from=start, effective_to=end,
+        cap_amount=Decimal("78000"),
+        effective_from=start,
+        effective_to=end,
         source_note="test",
     )
 
@@ -229,11 +240,18 @@ def test_insert_accepted_without_selection_rejected(db_session: Session):
     owner = make_user(db_session)
     lead = make_lead(db_session, owner)
     with pytest.raises(IntegrityError):
-        db_session.add(Quote(
-            number="HF-Q-9", lead_id=lead.id, status=QuoteStatus.accepted,
-            priced_on=date(2026, 11, 2), snapshot={}, calc_version="calc-1.0.0",
-            created_by=owner.id, sent_at=NOW,
-        ))
+        db_session.add(
+            Quote(
+                number="HF-Q-9",
+                lead_id=lead.id,
+                status=QuoteStatus.accepted,
+                priced_on=date(2026, 11, 2),
+                snapshot={},
+                calc_version="calc-1.0.0",
+                created_by=owner.id,
+                sent_at=NOW,
+            )
+        )
         db_session.flush()
     db_session.rollback()
 

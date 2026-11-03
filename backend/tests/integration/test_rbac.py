@@ -14,11 +14,18 @@ PASSWORD = "sunrise-roof-42"
 
 def sign_in_as(client: TestClient, db: Session, role: UserRole) -> None:
     email = f"{role.value}@example.com"
-    db.add(User(role=role, full_name=f"{role.value} user", email=email,
-                password_hash=hash_password(PASSWORD)))
+    db.add(
+        User(
+            role=role,
+            full_name=f"{role.value} user",
+            email=email,
+            password_hash=hash_password(PASSWORD),
+        )
+    )
     db.flush()
-    res = client.post("/api/auth/login", json={"identifier": email, "password": PASSWORD},
-                      headers=CSRF)
+    res = client.post(
+        "/api/auth/login", json={"identifier": email, "password": PASSWORD}, headers=CSRF
+    )
     assert res.status_code == 200
 
 
@@ -50,8 +57,6 @@ def test_staff_can_read_settings(client: TestClient, db_session: Session, with_s
 def test_upload_probe_counts_bytes(client: TestClient, db_session: Session):
     sign_in_as(client, db_session, UserRole.homeowner)
     payload = b"\0" * (9 * 1024 * 1024)
-    res = client.post(
-        "/api/dev/upload-probe", files={"file": ("probe.bin", payload)}, headers=CSRF
-    )
+    res = client.post("/api/dev/upload-probe", files={"file": ("probe.bin", payload)}, headers=CSRF)
     assert res.status_code == 200
     assert res.json() == {"received_bytes": 9 * 1024 * 1024}

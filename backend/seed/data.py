@@ -15,23 +15,46 @@ STAFF = [
 # Names, ownership and monthly bill are from the brief's sample table [CLIENT].
 HOMEOWNER_LEADS = [
     {
-        "user": {"full_name": "Prashant Wankhede", "email": "prashant@helioflow.example",
-                 "phone": "9000000001"},
-        "lead": {"code": "LD-30881", "ownership": "owner", "declared_monthly_bill": Decimal("3200"),
-                 "roof_area_sqft": Decimal("450"), "pincode": "440010"},
+        "user": {
+            "full_name": "Prashant Wankhede",
+            "email": "prashant@helioflow.example",
+            "phone": "9000000001",
+        },
+        "lead": {
+            "code": "LD-30881",
+            "ownership": "owner",
+            "declared_monthly_bill": Decimal("3200"),
+            "roof_area_sqft": Decimal("450"),
+            "pincode": "440010",
+        },
     },
     {
-        "user": {"full_name": "Rohit Meshram", "email": "rohit@helioflow.example",
-                 "phone": "9000000002"},
-        "lead": {"code": "LD-30902", "ownership": "tenant",
-                 "declared_monthly_bill": Decimal("1900"),
-                 "roof_area_sqft": Decimal("300"), "pincode": "440022"},
+        "user": {
+            "full_name": "Rohit Meshram",
+            "email": "rohit@helioflow.example",
+            "phone": "9000000002",
+        },
+        "lead": {
+            "code": "LD-30902",
+            "ownership": "tenant",
+            "declared_monthly_bill": Decimal("1900"),
+            "roof_area_sqft": Decimal("300"),
+            "pincode": "440022",
+        },
     },
     {
-        "user": {"full_name": "Ayesha Siddiqui", "email": "ayesha@helioflow.example",
-                 "phone": "9000000003"},
-        "lead": {"code": "LD-30915", "ownership": "owner", "declared_monthly_bill": Decimal("650"),
-                 "roof_area_sqft": Decimal("200"), "pincode": "440013"},
+        "user": {
+            "full_name": "Ayesha Siddiqui",
+            "email": "ayesha@helioflow.example",
+            "phone": "9000000003",
+        },
+        "lead": {
+            "code": "LD-30915",
+            "ownership": "owner",
+            "declared_monthly_bill": Decimal("650"),
+            "roof_area_sqft": Decimal("200"),
+            "pincode": "440013",
+        },
     },
 ]
 
@@ -43,18 +66,22 @@ CONSENT_VERSION = "2026-11-v1"
 
 # §3.7. Decimals are stored as strings so JSON never turns them into floats.
 SETTINGS = {
-    "generation_kwh_per_kw_year": 1400,            # [CLIENT]
-    "roof_sqft_per_kw": 100,                       # [A-2]
-    "min_monthly_bill_for_survey": 1000,           # [A-1]
+    "generation_kwh_per_kw_year": 1400,  # [CLIENT]
+    "roof_sqft_per_kw": 100,  # [A-2]
+    "min_monthly_bill_for_survey": 1000,  # [A-1]
     "capacity_options_kw": [1, 2, 3, 4, 5, 6, 7, 8, 9, 10],  # [A-9]
-    "usable_generation_pct": "0.90",               # [A-6]
-    "default_fixed_charge_monthly": 150,           # [A-8]
-    "quote_option_offsets": [-1, 0, 1],            # [A-10]
+    "usable_generation_pct": "0.90",  # [A-6]
+    "default_fixed_charge_monthly": 150,  # [A-8]
+    "quote_option_offsets": [-1, 0, 1],  # [A-10]
 }
 
 PRICE_RULE = {
-    "min_kw": Decimal("1"), "max_kw": Decimal("10"), "price_per_kw": Decimal("60000"),
-    "gst_inclusive": True, "effective_from": date(2026, 1, 1), "effective_to": None,
+    "min_kw": Decimal("1"),
+    "max_kw": Decimal("10"),
+    "price_per_kw": Decimal("60000"),
+    "gst_inclusive": True,
+    "effective_from": date(2026, 1, 1),
+    "effective_to": None,
     "note": "Placeholder (A-3). Client to confirm.",
 }
 

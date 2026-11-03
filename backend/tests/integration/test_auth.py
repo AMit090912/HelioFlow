@@ -145,9 +145,10 @@ def test_me_requires_valid_cookie(client: TestClient):
     res = client.get("/api/auth/me")
     assert res.status_code == 401
     assert res.json()["error"]["code"] == "NOT_AUTHENTICATED"
-    assert 'hf_session=""' in res.headers.get("set-cookie", "") or "max-age=0" in res.headers.get(
-        "set-cookie", ""
-    ).lower()
+    assert (
+        'hf_session=""' in res.headers.get("set-cookie", "")
+        or "max-age=0" in res.headers.get("set-cookie", "").lower()
+    )
 
 
 def test_me_and_logout(client: TestClient):

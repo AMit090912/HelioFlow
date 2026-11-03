@@ -41,8 +41,14 @@ def run(db: Session, demo_password: str) -> SeedReport:
     password_hash = hash_password(demo_password)
 
     for staff in data.STAFF:
-        _user(db, report, staff["role"], password_hash,
-              full_name=staff["full_name"], email=staff["email"])
+        _user(
+            db,
+            report,
+            staff["role"],
+            password_hash,
+            full_name=staff["full_name"],
+            email=staff["email"],
+        )
 
     for key, value in data.SETTINGS.items():
         exists = db.get(Setting, key) is not None
@@ -51,19 +57,30 @@ def run(db: Session, demo_password: str) -> SeedReport:
         report.count("settings", created=not exists)
 
     rule = data.PRICE_RULE
-    exists = db.execute(select(PriceRule.id).where(
-        PriceRule.min_kw == rule["min_kw"], PriceRule.max_kw == rule["max_kw"],
-        PriceRule.effective_from == rule["effective_from"],
-    )).first() is not None
+    exists = (
+        db.execute(
+            select(PriceRule.id).where(
+                PriceRule.min_kw == rule["min_kw"],
+                PriceRule.max_kw == rule["max_kw"],
+                PriceRule.effective_from == rule["effective_from"],
+            )
+        ).first()
+        is not None
+    )
     if not exists:
         db.add(PriceRule(**rule))
     report.count("price_rules", created=not exists)
 
     rule = data.SUBSIDY_RULE
-    exists = db.execute(select(SubsidyRule.id).where(
-        SubsidyRule.scheme_code == rule["scheme_code"],
-        SubsidyRule.effective_from == rule["effective_from"],
-    )).first() is not None
+    exists = (
+        db.execute(
+            select(SubsidyRule.id).where(
+                SubsidyRule.scheme_code == rule["scheme_code"],
+                SubsidyRule.effective_from == rule["effective_from"],
+            )
+        ).first()
+        is not None
+    )
     if not exists:
         db.add(SubsidyRule(**{**rule, "segment": SubsidySegment(rule["segment"])}))
     report.count("subsidy_rules", created=not exists)
@@ -74,19 +91,21 @@ def run(db: Session, demo_password: str) -> SeedReport:
         spec = item["lead"]
         exists = db.execute(select(Lead.id).where(Lead.code == spec["code"])).first() is not None
         if not exists:
-            db.add(Lead(
-                code=spec["code"],
-                homeowner_id=owner.id,
-                ownership=Ownership(spec["ownership"]),
-                property_type=PropertyType.home,
-                roof_type=RoofType.rcc_flat,
-                roof_area_sqft=spec["roof_area_sqft"],
-                declared_monthly_bill=spec["declared_monthly_bill"],
-                pincode=spec["pincode"],
-                consent_at=now,
-                consent_version=data.CONSENT_VERSION,
-                seed_note=data.LEAD_SEED_NOTE,
-            ))
+            db.add(
+                Lead(
+                    code=spec["code"],
+                    homeowner_id=owner.id,
+                    ownership=Ownership(spec["ownership"]),
+                    property_type=PropertyType.home,
+                    roof_type=RoofType.rcc_flat,
+                    roof_area_sqft=spec["roof_area_sqft"],
+                    declared_monthly_bill=spec["declared_monthly_bill"],
+                    pincode=spec["pincode"],
+                    consent_at=now,
+                    consent_version=data.CONSENT_VERSION,
+                    seed_note=data.LEAD_SEED_NOTE,
+                )
+            )
         report.count("leads", created=not exists)
 
     db.commit()

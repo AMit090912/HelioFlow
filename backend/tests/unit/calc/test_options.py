@@ -55,7 +55,9 @@ def test_offsets_step_through_non_contiguous_options():
 
     sparse = make_settings(capacity_options_kw=tuple(D(n) for n in (1, 2, 3, 5, 7, 10)))
     result = quote_options(
-        recommended_kw=D("5"), verified_roof_sqft=D("2000"), sanctioned_load_kw=D("20"),
+        recommended_kw=D("5"),
+        verified_roof_sqft=D("2000"),
+        sanctioned_load_kw=D("20"),
         settings=sparse,
     )
     assert result.offered == (D("3"), D("5"), D("7"))
@@ -66,7 +68,9 @@ def test_offsets_step_through_half_kw_options():
 
     halves = make_settings(capacity_options_kw=tuple(D(n) / 2 for n in range(2, 21)))
     result = quote_options(
-        recommended_kw=D("2.5"), verified_roof_sqft=D("2000"), sanctioned_load_kw=D("20"),
+        recommended_kw=D("2.5"),
+        verified_roof_sqft=D("2000"),
+        sanctioned_load_kw=D("20"),
         settings=halves,
     )
     assert result.offered == (D("2"), D("2.5"), D("3"))

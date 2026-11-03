@@ -234,8 +234,12 @@ def test_chain_stops_at_its_deadline():
     groq = Slow("groq", ProviderError("timeout"), ProviderError("timeout"))
     gem = Slow("gemini", GOOD)
     result = run_chain(
-        [groq, gem], images=[b"x"], text=None, sleep=lambda s: None,
-        budget_seconds=90, clock=lambda: now["t"],
+        [groq, gem],
+        images=[b"x"],
+        text=None,
+        sleep=lambda s: None,
+        budget_seconds=90,
+        clock=lambda: now["t"],
     )
     assert result.extraction is None and gem.calls == 0
     assert result.attempts[-1]["error_code"] == "deadline_exceeded"

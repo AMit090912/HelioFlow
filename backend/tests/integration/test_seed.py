@@ -13,7 +13,11 @@ DEMO_PASSWORD = "demo-pass-for-tests"
 def test_seed_creates_expected_rows_once(db_session: Session):
     first = run(db_session, DEMO_PASSWORD)
     assert first.created == {
-        "users": 5, "settings": 7, "price_rules": 1, "subsidy_rules": 1, "leads": 3,
+        "users": 5,
+        "settings": 7,
+        "price_rules": 1,
+        "subsidy_rules": 1,
+        "leads": 3,
     }
     second = run(db_session, DEMO_PASSWORD)
     assert sum(second.created.values()) == 0
