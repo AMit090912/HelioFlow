@@ -13,4 +13,4 @@ sales sends a same-day quote with subsidy and payback, and customers follow thei
 | AI | Groq vision (primary), Gemini Flash (fallback), manual entry (final fallback) |
 
 - Architecture: [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md)
-- Local setup and deployment: `docs/deployment.md` (written in Milestone 7)
+- Local setup, tests and deployment: [docs/deployment.md](docs/deployment.md)
