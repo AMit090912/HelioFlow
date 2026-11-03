@@ -22,6 +22,10 @@ class LoginIn(BaseModel):
     password: str = Field(min_length=1, max_length=128)
 
 
+class ProfileIn(BaseModel):
+    preferred_locale: Literal["en", "hi", "mr"]
+
+
 class UserOut(BaseModel):
     id: uuid.UUID
     full_name: str

@@ -60,6 +60,9 @@ def sign_in(client: TestClient, email: str) -> None:
 @pytest.fixture
 def ai(client: TestClient, db_session: Session):
     """Wire the app to the test session and a scripted provider chain."""
+    from seed import run as seed
+
+    seed(db_session, "seed-pass-for-tests")  # confirming a bill scores the lead (needs settings)
     state = {"providers": [Scripted("groq", GOOD)]}
     client.app.state.session_factory = lambda: nullcontext(db_session)
     client.app.state.ai_providers = lambda sha: state["providers"]

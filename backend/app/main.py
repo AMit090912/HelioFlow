@@ -4,7 +4,7 @@ import re
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, bills, dev, health, rules
+from app.api import auth, bills, dev, health, leads, rules
 from app.core.config import Settings, get_settings
 from app.core.db import SessionLocal
 from app.core.errors import error_response, install_error_handlers
@@ -108,6 +108,7 @@ def create_app() -> FastAPI:
     app.include_router(auth.router, prefix="/api")
     app.include_router(rules.router, prefix="/api")
     app.include_router(bills.router, prefix="/api")
+    app.include_router(leads.router, prefix="/api")
     if settings.env != "production":
         app.include_router(dev.router, prefix="/api")
     return app

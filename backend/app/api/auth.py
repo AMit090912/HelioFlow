@@ -19,7 +19,7 @@ from app.core.security import (
 )
 from app.models import User
 from app.models.enums import Locale, UserRole
-from app.schemas.auth import LoginIn, SignupIn, UserOut
+from app.schemas.auth import LoginIn, ProfileIn, SignupIn, UserOut
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
@@ -134,4 +134,14 @@ def logout(response: Response) -> Response:
 
 @router.get("/me", response_model=UserOut)
 def me(user: User = Depends(get_current_user)) -> UserOut:
+    return UserOut.of(user)
+
+
+@router.patch("/me", response_model=UserOut)
+def update_me(
+    body: ProfileIn, db: Session = Depends(get_db), user: User = Depends(get_current_user)
+) -> UserOut:
+    """The language choice is saved so messages and PDFs follow it (§2 Languages)."""
+    user.preferred_locale = Locale(body.preferred_locale)
+    db.commit()
     return UserOut.of(user)

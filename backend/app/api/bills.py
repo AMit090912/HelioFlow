@@ -17,11 +17,13 @@ from app.models import BillFile, BillReading, Lead, User
 from app.models.enums import ReadingStatus, UserRole
 from app.schemas.bills import ConfirmIn, ReadingOut
 from app.services.bill_reading import (
+    UPLOADABLE,
     accept_upload,
     confirm_reading,
     process_reading,
     sweep_if_stale,
 )
+from app.services.calc.errors import CalcError
 from app.services.uploads import UploadError
 
 router = APIRouter(tags=["bills"])
@@ -121,10 +123,17 @@ def confirm(
 ) -> ReadingOut:
     reading = _owned_reading(db, reading_id, user)
     sweep_if_stale(db, reading)
+    # Lock the lead so two confirms (double tap, two tabs) run one after the other, then re-read
+    # the reading under that lock before deciding anything.
+    lead = db.get(Lead, reading.lead_id, with_for_update=True, populate_existing=True)
+    db.refresh(reading)
     if reading.status == ReadingStatus.processing:
         raise ApiError(409, "READING_IN_PROGRESS", "The bill is still being read.")
     if reading.status == ReadingStatus.confirmed:
         raise ApiError(409, "READING_ALREADY_CONFIRMED", "These values are already confirmed.")
+    if lead.status not in UPLOADABLE:
+        # Another reading already qualified this lead; status only moves forward (§2).
+        raise ApiError(409, "LEAD_LOCKED", "This lead has moved past the bill step.")
     try:
         confirmed = confirm_reading(db, reading, values, user)
     except ValidationError as exc:  # an AI value kept unchanged broke the rules
@@ -132,4 +141,7 @@ def confirm(
             {"field": ".".join(str(p) for p in e["loc"]), "type": e["type"]} for e in exc.errors()
         ]
         raise ApiError(422, "VALIDATION_ERROR", "Some values need checking.", details) from exc
+    except CalcError as exc:  # business settings missing/invalid: an operator problem, not theirs
+        db.rollback()
+        raise ApiError(500, exc.code, "Scoring is not configured correctly.") from exc
     return _out(db, confirmed)

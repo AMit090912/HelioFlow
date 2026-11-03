@@ -23,6 +23,7 @@ from app.models import BillFile, BillReading, Lead, User
 from app.models.enums import BillKind, LeadStatus, ReadingSource, ReadingStatus
 from app.schemas.bills import ConfirmIn
 from app.services.ai import Provider, run_chain, sanity_flags, suggested_average_units
+from app.services.qualification import qualify_lead
 from app.services.uploads import (
     UploadError,
     check_quality,
@@ -230,8 +231,16 @@ def process_reading(
             reading.status = (
                 ReadingStatus.needs_reupload if unreadable else ReadingStatus.needs_review
             )
-        db.get(Lead, reading.lead_id).status = LeadStatus.bill_review
+        _back_to_review(db, reading.lead_id)
         db.commit()
+
+
+def _back_to_review(db: Session, lead_id: Any) -> None:
+    """A finished (or abandoned) read puts the lead in bill review, but never pulls back a lead
+    that another reading has already moved past the bill step: status only moves forward."""
+    lead = db.get(Lead, lead_id)
+    if lead is not None and lead.status in UPLOADABLE:
+        lead.status = LeadStatus.bill_review
 
 
 def sweep_if_stale(db: Session, reading: BillReading, now: datetime | None = None) -> None:
@@ -241,7 +250,7 @@ def sweep_if_stale(db: Session, reading: BillReading, now: datetime | None = Non
     if reading.status == ReadingStatus.processing and now - started > STALE_AFTER:
         reading.attempts = [*reading.attempts, {"outcome": "error", "error_code": "stale"}]
         reading.status = ReadingStatus.failed_manual
-        db.get(Lead, reading.lead_id).status = LeadStatus.bill_review
+        _back_to_review(db, reading.lead_id)
         db.commit()
 
 
@@ -297,5 +306,7 @@ def confirm_reading(
     reading.status = ReadingStatus.confirmed
     lead = db.get(Lead, reading.lead_id)
     lead.current_bill_reading_id = reading.id
+    db.flush()
+    qualify_lead(db, lead, reading)  # score + provisional size, same transaction (§7, §8)
     db.commit()
     return reading
