@@ -7,7 +7,8 @@ Lead qualification, quotation and project tracking for a rooftop solar installer
 and suggests a size. Sales sends a same-day quote with subsidy and payback, and the customer
 follows the installation on a private status link.
 
-**Live demo:** _added after deployment_
+**Live demo:** https://helio-flow-nine.vercel.app (free hosting: the first visit after a quiet spell
+can take up to a minute while the server wakes up)
 
 ## What it does
 
