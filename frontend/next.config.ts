@@ -32,7 +32,19 @@ const nextConfig: NextConfig = {
     return [{ source: "/api/:path*", destination: `${backend}/api/:path*` }];
   },
   async headers() {
-    return [{ source: "/:path*", headers: SECURITY_HEADERS }];
+    return [
+      { source: "/:path*", headers: SECURITY_HEADERS },
+      // Status links carry a secret in the URL (§12): never send it on as a referrer, never index.
+      // Listed after the default so these values win for the same header names.
+      {
+        source: "/:locale/s/:token*",
+        headers: [
+          { key: "Referrer-Policy", value: "no-referrer" },
+          { key: "X-Robots-Tag", value: "noindex, nofollow" },
+          { key: "Cache-Control", value: "no-store" },
+        ],
+      },
+    ];
   },
 };
 

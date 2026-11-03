@@ -74,6 +74,22 @@ export function SpotAccount({ className }: SpotProps) {
   );
 }
 
+/** Project status: a home with its panels in place and the sun climbing an arc of progress. */
+export function SpotProgress({ className }: SpotProps) {
+  return (
+    <svg viewBox="0 0 200 140" className={className} aria-hidden focusable="false">
+      <path d="M26 112 A 74 74 0 0 1 174 112" fill="none" stroke="#F6DFA8" strokeWidth="3" strokeDasharray="4 7" strokeLinecap="round" />
+      <path d="M26 112 A 74 74 0 0 1 112 39" fill="none" stroke="#E5B257" strokeWidth="3.5" strokeLinecap="round" />
+      <circle cx="112" cy="39" r="12" fill="#E5B257" />
+      <path d="M58 112 V84 H142 V112" fill="#012E2B" stroke="#F6DFA8" strokeWidth="2" />
+      <path d="M52 84 H148" stroke="#F6DFA8" strokeWidth="2.5" strokeLinecap="round" />
+      <path d="M68 78 L94 78 L100 64 L74 64 Z M104 78 L130 78 L136 64 L110 64 Z" fill="#006863" stroke="#F6DFA8" strokeWidth="1.5" strokeLinejoin="round" />
+      <path d="M92 112 V96 H108 V112" fill="none" stroke="#F6DFA8" strokeWidth="2" />
+      <path d="M16 112 H184" stroke="#F6DFA8" strokeWidth="2" opacity="0.5" />
+    </svg>
+  );
+}
+
 /** Homeowner empty state: a roof waiting for its panels (dashed outlines). */
 export function SpotEmptyRoof({ className }: SpotProps) {
   return (

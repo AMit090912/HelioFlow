@@ -5,13 +5,13 @@ import { useLocale, useTranslations } from "next-intl";
 
 import { EmptyState } from "@/components/empty-state";
 import { HomeownerOnly } from "@/components/homeowner-only";
-import { SpotBill, SpotEmptyRoof } from "@/components/illustrations/spot";
+import { SpotBill, SpotEmptyRoof, SpotProgress } from "@/components/illustrations/spot";
 import { SiteHeader } from "@/components/site-header";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { Link } from "@/i18n/navigation";
 import { ApiError } from "@/lib/api";
-import { formatKw, formatNumber, formatRupees } from "@/lib/format";
+import { formatDay, formatKw, formatNumber, formatRupees } from "@/lib/format";
 import { useMyLeads, useReading, type LeadMine } from "@/lib/leads";
 import { focusOption, useQuote } from "@/lib/quotes";
 import { cn } from "@/lib/utils";
@@ -130,7 +130,9 @@ function Qualified({ lead }: { lead: LeadMine }) {
 
   return (
     <div className="space-y-6">
-      {lead.current_quote ? (
+      {lead.project ? (
+        <ProjectCard project={lead.project} code={lead.code} />
+      ) : lead.current_quote ? (
         <QuoteCard quoteId={lead.current_quote.id} code={lead.code} />
       ) : (
       <section className="relative overflow-hidden rounded-3xl bg-night p-6 text-white sm:p-9">
@@ -201,9 +203,50 @@ function BillSummary({ lead, readingId }: { lead: LeadMine; readingId: string })
 
 /** Where the lead is on the way to installation: 1 = contact next, 3 = quote, 4 = accepted. */
 function stageOf(lead: LeadMine): number {
+  if (lead.project) {
+    const done = lead.project.stages.filter((s) => s.done_at).map((s) => s.stage);
+    return done.includes("installation_completed") ? 5 : 4;
+  }
   if (lead.current_quote?.status === "accepted") return 4;
   if (lead.current_quote) return 3;
   return 1;
+}
+
+/** Once the advance is in, the installation's real stages replace the quote card (§12, §13). */
+function ProjectCard({ project, code }: { project: NonNullable<LeadMine["project"]>; code: string }) {
+  const t = useTranslations("dashboard");
+  const tp = useTranslations("project");
+  const locale = useLocale();
+  const current = project.stages.findIndex((s) => s.stage === project.stage);
+  return (
+    <section className="relative overflow-hidden rounded-3xl bg-night p-6 text-white sm:p-9">
+      <SpotProgress className="pointer-events-none absolute -right-4 bottom-0 hidden w-48 opacity-80 sm:block" />
+      <div className="relative max-w-md">
+        <p className="text-gold-soft">{t("project.kicker")}</p>
+        <h2 className="font-display mt-1 text-[1.875rem] font-semibold leading-[1.15] sm:text-[2.25rem]">
+          {tp(`stages.${project.stage}`)}
+        </h2>
+        {project.scheduled_for ? (
+          <p className="mt-2 text-white/85">{tp("planned", { date: formatDay(project.scheduled_for, locale) })}</p>
+        ) : null}
+        <ol className="mt-5 flex gap-1.5" aria-label={tp("code", { code })}>
+          {project.stages.map((s, i) => (
+            <li
+              key={s.stage}
+              title={tp(`stages.${s.stage}`)}
+              className={cn("h-1.5 flex-1 rounded-full", i <= current ? "bg-gold" : "bg-white/20")}
+            >
+              <span className="sr-only">
+                {tp(`stages.${s.stage}`)}: {s.done_at ? tp("doneOn", { date: formatDay(s.done_at, locale) }) : tp("upcoming")}
+              </span>
+            </li>
+          ))}
+        </ol>
+        <p className="mt-4 text-sm text-white/70">{t("project.whatsapp")}</p>
+        <p className="mt-2 text-sm text-white/60">{t("reference", { code })}</p>
+      </div>
+    </section>
+  );
 }
 
 function QuoteCard({ quoteId, code }: { quoteId: string; code: string }) {

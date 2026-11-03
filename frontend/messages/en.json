@@ -107,7 +107,8 @@
     "QUOTE_SUPERSEDED": "This quote was replaced by a newer one.",
     "QUOTE_ALREADY_ACCEPTED": "You've already accepted this quote.",
     "OPTION_NOT_OFFERED": "Choose one of the sizes in this quote.",
-    "LEAD_STATUS_CONFLICT": "This can't be done right now. Refresh the page and try again."
+    "LEAD_STATUS_CONFLICT": "This can't be done right now. Refresh the page and try again.",
+    "LINK_INACTIVE": "This link is no longer active."
   },
   "home": {
     "title": "My solar",
@@ -124,7 +125,9 @@
     "forbiddenAction": "Go to my solar",
     "workspace": "Sales workspace",
     "leadsSubtitle": "New enquiries, scored and ready for a visit or a call.",
-    "leadsEmptyTitle": "No leads yet"
+    "leadsEmptyTitle": "No leads yet",
+    "navProjects": "Projects",
+    "navRules": "Rules"
   },
   "server": {
     "waking": "Waking up the server…",
@@ -359,6 +362,10 @@
     "closed": {
       "title": "Your enquiry is closed",
       "body": "If you would like to go ahead with solar, start a new check or call us."
+    },
+    "project": {
+      "kicker": "Your installation",
+      "whatsapp": "Updates would be sent to your WhatsApp (demo)."
     }
   },
   "quote": {
@@ -426,6 +433,28 @@
     "closed": {
       "title": "This enquiry is closed",
       "body": "This quote can no longer be accepted. Call us if you would like to continue."
+    }
+  },
+  "project": {
+    "title": "Solar installation for {name}",
+    "code": "Project {code}",
+    "now": "Now",
+    "doneOn": "Done on {date}",
+    "upcoming": "Coming up",
+    "planned": "Installation planned for {date}",
+    "privacy": "This page shows progress only. It contains no personal or payment details.",
+    "inactive": {
+      "title": "This link is no longer active",
+      "body": "Ask HelioFlow for a new link if you still need one."
+    },
+    "footer": "HelioFlow for Company A, Nagpur",
+    "stages": {
+      "advance_received": "Advance received",
+      "installation_scheduled": "Installation scheduled",
+      "installation_completed": "Installation completed",
+      "net_metering_completed": "Net metering completed",
+      "subsidy_applied": "Subsidy application submitted",
+      "subsidy_credited": "Subsidy credited"
     }
   }
 }
