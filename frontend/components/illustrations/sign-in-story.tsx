@@ -48,8 +48,9 @@ function Shadowed({ x, y, w, h, r = 14, children, rotate }: { x: number; y: numb
 
 export function SignInStory({ className }: { className?: string }) {
   return (
-    <svg viewBox="0 0 640 900" className={className} aria-hidden focusable="false" preserveAspectRatio="xMidYMax slice">
-      <rect width="640" height="900" fill={NIGHT} />
+    // Only the art region (y 330–900) is framed and scaled to fit; overflow lets the sun's rings and
+    // rays run on to the panel edges on wide screens. The panel behind supplies the night sky.
+    <svg viewBox="0 330 640 570" className={className} aria-hidden focusable="false" preserveAspectRatio="xMidYMax meet" overflow="visible">
 
       {/* The sunrise: halo rings, the logo's ray fan, a half sun on the horizon. */}
       <circle cx="320" cy="900" r="430" fill="none" stroke={GOLD_SOFT} strokeOpacity="0.07" strokeWidth="2" />

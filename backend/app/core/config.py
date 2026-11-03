@@ -27,8 +27,8 @@ class Settings(BaseSettings):
     ai_mode: Literal["live", "demo", "test"] = "live"
     max_upload_mb: int = 10
     seed_demo_password: str | None = None
-    # One-click demo sign-in (sign-in page). Unset: on in development, off in production.
-    # Set DEMO_LOGINS=true on a deployed demo so reviewers can try every role without sign-up.
+    # One-click demo sign-in on the sign-in page. Off unless DEMO_LOGINS=true (e.g. on a deployed
+    # demo, so reviewers can try every role without sign-up).
     demo_logins: bool | None = None
 
     # AI providers (ARCHITECTURE §6). Keys stay server-side. Model defaults were verified against

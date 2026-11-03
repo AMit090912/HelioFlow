@@ -58,12 +58,13 @@ def test_switched_off_means_not_there(client, monkeypatch):
     assert demo(client, "sales").status_code == 404
 
 
-def test_default_is_on_in_development_and_off_in_production(monkeypatch):
+def test_off_unless_switched_on(monkeypatch):
     from app.api.demo import demo_logins_enabled
 
     s = get_settings()
-    monkeypatch.setattr(s, "demo_logins", None)
-    monkeypatch.setattr(s, "env", "development")
+    for env in ("development", "production"):
+        monkeypatch.setattr(s, "env", env)
+        monkeypatch.setattr(s, "demo_logins", None)
+        assert demo_logins_enabled() is False
+    monkeypatch.setattr(s, "demo_logins", True)
     assert demo_logins_enabled() is True
-    monkeypatch.setattr(s, "env", "production")
-    assert demo_logins_enabled() is False

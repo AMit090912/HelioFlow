@@ -65,10 +65,9 @@ export function SignInForm() {
 
   return (
     <div className="grid min-h-dvh lg:grid-cols-2">
-      {/* Desktop: the sun → panel → home "flow" illustration with the brand promise */}
+      {/* Desktop: the brand promise above the bill → roof → quote artwork. The art only fills the
+          space left under the text, so it can never cover it, whatever the screen size. */}
       <aside className="relative hidden overflow-hidden bg-night lg:block">
-        <SignInStory className="absolute inset-0 size-full" />
-        {/* Text sits in the open sky, top left; the illustration's sun, array and home stay clear. */}
         <div className="relative flex h-full min-h-dvh flex-col gap-14 p-12">
           <Link href="/" aria-label={tc("appName")} className="self-start rounded-md">
             <Logo tone="dark" />
@@ -76,6 +75,9 @@ export function SignInForm() {
           <div className="max-w-[19rem] xl:max-w-[22rem]">
             <p className="font-display text-[2.25rem] font-semibold leading-[1.1] text-white">{tc("tagline")}</p>
             <p className="mt-4 text-lg text-white/75">{t("panelBody")}</p>
+          </div>
+          <div className="relative -mx-12 -mb-12 min-h-[18rem] flex-1">
+            <SignInStory className="absolute inset-0 size-full" />
           </div>
         </div>
       </aside>

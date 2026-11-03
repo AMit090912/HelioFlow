@@ -1,7 +1,7 @@
 """One-click demo sign-in: try the app as a new homeowner, a returning homeowner, sales or admin
 without typing anything. For local testing and for reviewers of a deployed demo.
 
-Only available when DEMO_LOGINS is on (default: development only). No password reaches the
+Only available when DEMO_LOGINS=true (off by default, everywhere). No password reaches the
 browser: the server issues the session directly. "New homeowner" creates a throwaway account
 each time, so every run of the journey starts clean.
 """
@@ -39,10 +39,7 @@ STAFF_EMAIL = {s["role"]: s["email"] for s in seed_data.STAFF}
 
 
 def demo_logins_enabled() -> bool:
-    settings = get_settings()
-    if settings.demo_logins is not None:
-        return settings.demo_logins
-    return settings.env != "production"
+    return get_settings().demo_logins is True
 
 
 class DemoLoginIn(BaseModel):
