@@ -81,3 +81,16 @@ export function formatBillMonth(month: string, locale: string): string {
   const date = new Date(Date.UTC(Number(m[1]), Number(m[2]) - 1, 1));
   return new Intl.DateTimeFormat(tag(locale), { month: "short", year: "2-digit", timeZone: "UTC", numberingSystem: "latn" }).format(date);
 }
+
+/** "3 November 2026" in the reader's language, Western digits, India time. Accepts
+ * a date ("2026-11-08") or a timestamp. */
+export function formatDay(iso: string, locale: string): string {
+  const instant = iso.length === 10 ? `${iso}T00:00:00+05:30` : iso;
+  return new Intl.DateTimeFormat(tag(locale), {
+    day: "numeric",
+    month: "long",
+    year: "numeric",
+    numberingSystem: "latn",
+    timeZone: "Asia/Kolkata",
+  }).format(new Date(instant));
+}

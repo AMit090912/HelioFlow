@@ -62,8 +62,12 @@ export const quoteKeys = { one: (id: string) => ["quotes", id] as const };
 
 export const pdfUrl = (id: string, lang?: string) => `/api/quotes/${id}/pdf${lang ? `?lang=${lang}` : ""}`;
 
-export function useQuote(id: string) {
-  return useQuery({ queryKey: quoteKeys.one(id), queryFn: () => api<QuoteView>(`/api/quotes/${id}`) });
+export function useQuote(id: string, enabled = true) {
+  return useQuery({
+    queryKey: quoteKeys.one(id),
+    queryFn: () => api<QuoteView>(`/api/quotes/${id}`),
+    enabled: enabled && !!id,
+  });
 }
 
 export function useAcceptQuote(id: string) {

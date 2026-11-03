@@ -1,6 +1,6 @@
 "use client";
 
-import { Inbox, Lock, Menu } from "lucide-react";
+import { FolderKanban, Inbox, Lock, Menu, SlidersHorizontal } from "lucide-react";
 import { useLocale, useTranslations } from "next-intl";
 import { useState, type ReactNode } from "react";
 
@@ -13,7 +13,11 @@ import { Link, usePathname } from "@/i18n/navigation";
 import { cn } from "@/lib/utils";
 import { useSignOut } from "@/lib/use-session";
 
-const NAV = [{ href: "/staff/leads", key: "navLeads", icon: Inbox }] as const;
+const NAV = [
+  { href: "/staff/leads", key: "navLeads", icon: Inbox },
+  { href: "/staff/projects", key: "navProjects", icon: FolderKanban },
+  { href: "/staff/rules", key: "navRules", icon: SlidersHorizontal },
+] as const;
 
 /** Navigation + language + sign-out. Rendered in the desktop sidebar and the phone sheet. */
 function StaffNav({ onNavigate }: { onNavigate?: () => void }) {

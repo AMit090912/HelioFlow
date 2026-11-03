@@ -89,3 +89,29 @@ export function when(iso: string): string {
     new Date(iso),
   );
 }
+
+export const STAGE_LABEL: Record<string, string> = {
+  advance_received: "Advance received",
+  installation_scheduled: "Installation scheduled",
+  installation_completed: "Installation completed",
+  net_metering_completed: "Net metering completed",
+  subsidy_applied: "Subsidy application submitted",
+  subsidy_credited: "Subsidy credited",
+};
+
+export const PROJECT_ERROR_TEXT: Record<string, string> = {
+  STAGE_NOT_NEXT: "Someone else moved this project. Refresh to see the latest stage.",
+  REASON_REQUIRED: "Give a short reason (at least 5 characters).",
+  DATE_IN_PAST: "The installation date can't be in the past.",
+  ADVANCE_TOO_LARGE: "The advance can't be more than the cost after subsidy.",
+  LEAD_STATUS_CONFLICT: "An advance can be recorded only after the homeowner accepts a quote.",
+  RULE_INVALID: "The end date must be on or after the start date.",
+  GST_EXCLUSIVE: "Prices must include GST (no GST rate is configured).",
+  SETTING_INVALID: "That value isn't allowed for this setting.",
+  VALIDATION_ERROR: "Some values need checking.",
+  FORBIDDEN: "Only an admin can change rules.",
+};
+
+export function projectError(code: string, fallback = "Something went wrong. Try again."): string {
+  return PROJECT_ERROR_TEXT[code] ?? CALC_ERROR_TEXT[code] ?? fallback;
+}

@@ -46,6 +46,7 @@ export type LeadMine = {
   current_reading: ReadingRef | null;
   latest_reading: ReadingRef | null;
   current_quote: { id: string; status: "sent" | "accepted" | "superseded" } | null;
+  project: { stage: string; stages: { stage: string; done_at: string | null }[]; scheduled_for: string | null } | null;
   created_at: string;
 };
 

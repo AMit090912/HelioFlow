@@ -27,7 +27,7 @@ export type StaffLeadRow = {
 
 export type LeadEvent = {
   id: string;
-  kind: "verified" | "upgraded" | "closed" | "quote_sent" | "quote_accepted";
+  kind: "verified" | "upgraded" | "closed" | "quote_sent" | "quote_accepted" | "converted" | "link_regenerated" | "link_revoked";
   from_status: string | null;
   to_status: string | null;
   actor_name: string;

@@ -3,6 +3,7 @@
 import { ArrowLeft, Phone } from "lucide-react";
 import { use, type ReactNode } from "react";
 
+import { AdvanceForm } from "@/components/staff/advance-form";
 import { BillCompare } from "@/components/staff/bill-compare";
 import { FLAG_LABEL, NEXT_ACTION_LABEL, reasonText, STATUS_LABEL, when } from "@/components/staff/copy";
 import { LeadActions } from "@/components/staff/lead-actions";
@@ -23,6 +24,9 @@ const EVENT_LABEL: Record<string, string> = {
   closed: "Closed",
   quote_sent: "Quote sent",
   quote_accepted: "Quote accepted",
+  converted: "Advance recorded, project started",
+  link_regenerated: "New status link made (old one stopped)",
+  link_revoked: "Status link turned off",
 };
 
 export default function StaffLeadPage({ params }: { params: Promise<{ id: string }> }) {
@@ -102,6 +106,12 @@ function LeadView({ lead }: { lead: StaffLeadDetail }) {
               <p className="text-ink-2">The homeowner hasn&apos;t confirmed a bill yet.</p>
             )}
           </Section>
+          {lead.status === "accepted" || lead.status === "converted" ? (
+            <Section title="Project">
+              {/* Stays mounted across the accepted → converted refetch so the one-time link stays visible. */}
+              <AdvanceForm lead={lead} />
+            </Section>
+          ) : null}
           <Section title="Quote builder" aside={<span className="text-sm text-ink-2">Prices are GST-inclusive</span>}>
             <QuoteBuilder lead={lead} />
           </Section>
