@@ -401,7 +401,27 @@
     "project": {
       "kicker": "Your installation",
       "whatsapp": "Updates would be sent to your WhatsApp (demo)."
-    }
+    },
+    "done": {
+      "kicker": "All done",
+      "title": "Your solar is up and running",
+      "body": "Installation, net metering and your subsidy are all complete. Thank you for choosing HelioFlow."
+    },
+    "stageNote": {
+      "advance_received": "We've received your advance. Next, we fix your installation date.",
+      "installation_scheduled": "Your installation date is set. Our team will come to fit the panels.",
+      "installation_completed": "Your panels are fitted. Next comes net metering, so the power you send to the grid is counted.",
+      "net_metering_completed": "Net metering is done. Next, we apply for your subsidy.",
+      "subsidy_applied": "Your subsidy application is submitted. It is credited once it is approved.",
+      "subsidy_credited": "Your subsidy is credited. Everything is complete."
+    },
+    "system": {
+      "title": "Your system",
+      "accepted": "Accepted",
+      "suggested": "Our suggestion"
+    },
+    "timelineEarlier": "Bill, survey and quote",
+    "timelineDone": "Your solar journey"
   },
   "quote": {
     "title": "Your solar quote",

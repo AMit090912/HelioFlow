@@ -7,7 +7,7 @@ import { AdvanceForm } from "@/components/staff/advance-form";
 import { BillCompare } from "@/components/staff/bill-compare";
 import { FLAG_LABEL, NEXT_ACTION_LABEL, reasonText, STATUS_LABEL, when } from "@/components/staff/copy";
 import { LeadActions } from "@/components/staff/lead-actions";
-import { nextStep, type SectionId } from "@/components/staff/next-step";
+import { nextStep, statusLabel, type SectionId } from "@/components/staff/next-step";
 import { NextStepCard } from "@/components/staff/next-step-card";
 import { QuoteBuilder } from "@/components/staff/quote-builder";
 import { FlagChip, ScoreBadge } from "@/components/staff/score-badge";
@@ -140,6 +140,8 @@ function LeadView({ lead }: { lead: StaffLeadDetail }) {
   const next = nextStep(lead, stage);
   const current = next.owner === "you" ? next.section : undefined;
   const reached = next.section ? SECTION_ORDER.indexOf(next.section) : -1;
+  // Upgrade and close only apply before a quote is accepted (the API refuses them after).
+  const canAct = !["accepted", "converted", "closed_lost"].includes(lead.status);
   const stateOf = (id: SectionId): SectionState =>
     id === current ? "now" : next.step === "done" || SECTION_ORDER.indexOf(id) < reached ? "done" : undefined;
 
@@ -153,7 +155,15 @@ function LeadView({ lead }: { lead: StaffLeadDetail }) {
           <h1 className="font-display mt-1 text-[2rem] font-semibold leading-tight text-ink">{lead.homeowner.full_name}</h1>
           <div className="mt-2 flex flex-wrap items-center gap-2 text-sm">
             <ScoreBadge score={lead.score} />
-            <span className="rounded-full bg-surface px-2.5 py-0.5 text-ink">{STATUS_LABEL[lead.status] ?? lead.status}</span>
+            <span
+              className={cn(
+                "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5",
+                next.step === "done" ? "bg-teal-wash font-medium text-teal" : "bg-surface text-ink",
+              )}
+            >
+              {next.step === "done" ? <Check className="size-3.5" aria-hidden /> : null}
+              {statusLabel(lead, next, STATUS_LABEL)}
+            </span>
             {lead.next_action && next.step === "check" ? (
               <span className="text-ink-2">Suggested check: {NEXT_ACTION_LABEL[lead.next_action]}</span>
             ) : null}
@@ -232,9 +242,21 @@ function LeadView({ lead }: { lead: StaffLeadDetail }) {
               </div>
             ) : null}
           </Section>
-          <Section title="Actions">
-            <LeadActions lead={lead} />
-            <h3 className="mt-5 border-t border-border pt-4 text-sm font-semibold text-ink">History</h3>
+          <Section title={canAct ? "Actions" : "History"}>
+            {canAct ? (
+              <>
+                <LeadActions lead={lead} />
+                <h3 className="mt-5 border-t border-border pt-4 text-sm font-semibold text-ink">History</h3>
+              </>
+            ) : (
+              <p className="text-sm text-ink-2">
+                {lead.status === "closed_lost"
+                  ? "This lead is closed, so there is nothing left to change."
+                  : next.step === "done"
+                    ? "This project is complete: the subsidy is credited. Nothing left to change."
+                    :"The homeowner accepted a quote, so this lead can't be closed as lost. Its project carries on to Subsidy credited and then shows as Completed."}
+              </p>
+            )}
             {lead.events.length ? (
               <ol className="mt-3 space-y-3 text-sm">
                 {lead.events.map((e) => (

@@ -129,6 +129,11 @@ export function nextStep(lead: LeadLike, stage?: Stage | null): NextStep {
   }
 }
 
+/** The status to show: a started project whose subsidy is credited reads "Completed". */
+export function statusLabel(lead: { status: string }, next: NextStep, labels: Record<string, string>): string {
+  return next.step === "done" ? "Completed" : (labels[lead.status] ?? lead.status);
+}
+
 /** How far along the journey the lead is: index into JOURNEY; JOURNEY.length when done. */
 export function journeyIndex(step: NextStep["step"]): number {
   if (step === "done") return JOURNEY.length;

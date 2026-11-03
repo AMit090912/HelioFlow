@@ -1,13 +1,13 @@
 "use client";
 
-import { ChevronRight, Clock } from "lucide-react";
+import { Check, ChevronRight, Clock } from "lucide-react";
 import { useTranslations } from "next-intl";
 import { useMemo, useState } from "react";
 
 import { EmptyState } from "@/components/empty-state";
 import { SpotEmptyInbox } from "@/components/illustrations/spot";
 import { age, FLAG_LABEL, reasonText, STATUS_LABEL } from "@/components/staff/copy";
-import { nextStep, type NextStep } from "@/components/staff/next-step";
+import { nextStep, statusLabel, type NextStep } from "@/components/staff/next-step";
 import { FlagChip, ScoreBadge } from "@/components/staff/score-badge";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -22,10 +22,11 @@ const SCORES: { value: InboxFilters["score"]; label: string }[] = [
   { value: "high", label: "High" },
   { value: "low", label: "Low" },
 ];
-type Who = "you" | "homeowner" | "all";
+type Who = "you" | "homeowner" | "done" | "all";
 const WHO: { value: Who; label: string }[] = [
   { value: "you", label: "Your move" },
   { value: "homeowner", label: "Waiting on homeowner" },
+  { value: "done", label: "Completed" },
   { value: "all", label: "All" },
 ];
 type Row = StaffLeadRow & { next: NextStep };
@@ -45,8 +46,9 @@ export default function LeadsInboxPage() {
     const stageOf = new Map<string, Stage>((projects ?? []).map((p) => [p.lead_id, p.stage]));
     return rawLeads.map((l) => ({ ...l, next: nextStep(l, stageOf.get(l.id)) }));
   }, [rawLeads, projects]);
-  const count = (w: Who) => (rows ?? []).filter((r) => w === "all" || r.next.owner === w).length;
-  const leads = rows?.filter((r) => who === "all" || r.next.owner === who);
+  const inTab = (r: Row, w: Who) => w === "all" || (w === "done" ? r.next.step === "done" : r.next.owner === w);
+  const count = (w: Who) => (rows ?? []).filter((r) => inTab(r, w)).length;
+  const leads = rows?.filter((r) => inTab(r, who));
 
   return (
     <div className="space-y-6">
@@ -137,11 +139,13 @@ export default function LeadsInboxPage() {
         rows && rows.length > 0 ? (
           <EmptyState
             illustration={<SpotEmptyInbox className="w-full" />}
-            title={who === "you" ? "Nothing waiting on you" : "Nobody to wait on"}
+            title={who === "you" ? "Nothing waiting on you" : who === "done" ? "Nothing completed yet" : "Nobody to wait on"}
             message={
               who === "you"
                 ? "Every open lead is with the homeowner for now. Check Waiting on homeowner if someone needs a nudge."
-                : "No lead is waiting on a homeowner right now."
+                : who === "done"
+                  ? "A lead shows here once its project reaches Subsidy credited."
+                  : "No lead is waiting on a homeowner right now."
             }
           />
         ) : (
@@ -214,7 +218,7 @@ function LeadTable({ leads }: { leads: Row[] }) {
                   {lead.homeowner_name}
                 </Link>
                 <p className="text-[0.8125rem] text-ink-2 tabular">
-                  {lead.code} · {STATUS_LABEL[lead.status] ?? lead.status}
+                  {lead.code} · {statusLabel(lead, lead.next, STATUS_LABEL)}
                 </p>
               </td>
               <td className="px-4 py-3.5">
@@ -260,7 +264,7 @@ function LeadCard({ lead }: { lead: Row }) {
         <ScoreBadge score={lead.score} />
       </div>
       <p className="mt-2 text-sm text-ink-2">
-        {lead.score_reasons.length ? lead.score_reasons.map(reasonText).join("; ") : STATUS_LABEL[lead.status]}
+        {lead.score_reasons.length ? lead.score_reasons.map(reasonText).join("; ") : statusLabel(lead, lead.next, STATUS_LABEL)}
       </p>
       <div className="mt-3 flex flex-wrap items-center justify-between gap-2 text-sm">
         <SizeCell lead={lead} />
@@ -275,6 +279,13 @@ function LeadCard({ lead }: { lead: Row }) {
 
 /** The task itself when it is the team's move; who it is waiting on otherwise. */
 function NextCell({ next }: { next: NextStep }) {
+  if (next.step === "done") {
+    return (
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-wash px-2.5 py-0.5 text-[0.8125rem] font-medium text-teal">
+        <Check className="size-3.5" aria-hidden /> Completed
+      </span>
+    );
+  }
   if (next.owner === "you") return <span className="font-semibold text-teal">{next.title}</span>;
   return (
     <span className="inline-flex items-start gap-1.5 text-ink-2">

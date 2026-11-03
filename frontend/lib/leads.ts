@@ -174,7 +174,8 @@ export function uploadBill(
 }
 
 export function useMyLeads(enabled = true) {
-  return useQuery({ queryKey: leadKeys.mine, queryFn: fetchMyLeads, enabled });
+  // Staff move the lead and project on from their side: refresh when the homeowner comes back.
+  return useQuery({ queryKey: leadKeys.mine, queryFn: fetchMyLeads, enabled, refetchOnWindowFocus: true });
 }
 
 export function useLead(id: string) {
