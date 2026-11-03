@@ -65,7 +65,27 @@
     "noAccount": "New here? Start with the solar check.",
     "identifierRequired": "Enter your email or mobile number.",
     "passwordShort": "Password must be at least 8 characters.",
-    "panelBody": "Your bill, your roof and your quote, in one place."
+    "panelBody": "Your bill, your roof and your quote, in one place.",
+    "demo": {
+      "title": "Try it without an account",
+      "body": "For testing: one click signs you in. Demo accounts only.",
+      "new_homeowner": {
+        "label": "New homeowner",
+        "hint": "Fresh start every time"
+      },
+      "homeowner": {
+        "label": "Demo homeowner",
+        "hint": "Keeps your progress"
+      },
+      "sales": {
+        "label": "Sales",
+        "hint": "Leads, quotes, projects"
+      },
+      "admin": {
+        "label": "Admin",
+        "hint": "Prices, subsidy, settings"
+      }
+    }
   },
   "errors": {
     "NOT_FOUND": "We couldn't find that page or record.",
@@ -109,7 +129,8 @@
     "OPTION_NOT_OFFERED": "Choose one of the sizes in this quote.",
     "LEAD_STATUS_CONFLICT": "This can't be done right now. Refresh the page and try again.",
     "LINK_INACTIVE": "This link is no longer active.",
-    "NAME_INVALID": "Enter your name using letters only (no numbers or symbols)."
+    "NAME_INVALID": "Enter your name using letters only (no numbers or symbols).",
+    "DEMO_NOT_SEEDED": "Demo accounts aren't set up yet. Run the seed first."
   },
   "home": {
     "title": "My solar",

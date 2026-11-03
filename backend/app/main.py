@@ -4,7 +4,7 @@ import re
 from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.api import auth, bills, dev, health, leads, projects, public, quotes, rules, staff
+from app.api import auth, bills, demo, dev, health, leads, projects, public, quotes, rules, staff
 from app.core import logging as redaction
 from app.core.config import Settings, get_settings
 from app.core.db import SessionLocal
@@ -78,6 +78,7 @@ def create_app() -> FastAPI:
     app.state.login_limiter = SlidingWindowLimiter(limit=5, window_seconds=60)
     app.state.upload_limiter = SlidingWindowLimiter(limit=10, window_seconds=3600)
     app.state.status_limiter = SlidingWindowLimiter(limit=30, window_seconds=60)  # §4
+    app.state.demo_limiter = SlidingWindowLimiter(limit=30, window_seconds=3600)
     # Background bill reading gets its own session and provider chain; tests swap both.
     app.state.session_factory = SessionLocal
     app.state.ai_providers = providers_for(settings)
@@ -116,6 +117,7 @@ def create_app() -> FastAPI:
 
     app.include_router(health.router, prefix="/api")
     app.include_router(auth.router, prefix="/api")
+    app.include_router(demo.router, prefix="/api")
     app.include_router(rules.router, prefix="/api")
     app.include_router(bills.router, prefix="/api")
     app.include_router(leads.router, prefix="/api")

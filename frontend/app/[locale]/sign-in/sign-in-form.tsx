@@ -10,6 +10,7 @@ import { useForm } from "react-hook-form";
 import { z } from "zod";
 
 import { Logo } from "@/components/brand/logo";
+import { DemoLogins } from "@/components/demo-logins";
 import { SunFlowHome } from "@/components/illustrations/sun-flow-home";
 import { LanguageSwitcher } from "@/components/language-switcher";
 import { Button } from "@/components/ui/button";
@@ -159,6 +160,8 @@ export function SignInForm() {
                 {t("noAccount")}
               </Link>
             </p>
+
+            <DemoLogins onSigningIn={() => setSigningIn(true)} />
           </div>
         </main>
       </div>
