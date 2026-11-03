@@ -2,7 +2,7 @@ from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
-from pydantic import ValidationInfo, field_validator
+from pydantic import ValidationInfo, field_validator, model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 BACKEND_DIR = Path(__file__).resolve().parents[2]
@@ -47,6 +47,13 @@ class Settings(BaseSettings):
         if isinstance(value, str) and not value.strip():
             return cls.model_fields[info.field_name].default
         return value
+
+    @model_validator(mode="after")
+    def _production_secret(self) -> "Settings":
+        # HS256 wants at least 32 bytes of key (RFC 7518 §3.2). Fail at startup, not at sign-in.
+        if self.env == "production" and len(self.jwt_secret) < 32:
+            raise ValueError("JWT_SECRET must be at least 32 characters in production")
+        return self
 
 
 @lru_cache

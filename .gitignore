@@ -32,3 +32,6 @@ test-results/
 Thumbs.db
 .vscode/
 .idea/
+
+# End-to-end run state (signed-in sessions)
+frontend/e2e/.state/
