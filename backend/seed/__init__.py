@@ -164,6 +164,7 @@ def run(db: Session, demo_password: str) -> SeedReport:
                 )
             )
         report.count("leads", created=not exists)
+        db.flush()  # the app's sessions don't autoflush: make the new lead findable
 
         lead = db.execute(select(Lead).where(Lead.code == spec["code"])).scalar_one()
         unread = lead.current_bill_reading_id is None

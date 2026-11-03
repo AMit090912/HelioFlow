@@ -43,3 +43,11 @@ def test_seed_values_match_brief_and_spec(db_session: Session):
     assert rohit.recommended_kw is None and rohit.status.value == "call_pending"
     prashant = db_session.execute(select(Lead).where(Lead.code == "LD-30881")).scalar_one()
     assert (prashant.score.value, prashant.recommended_kw) == ("high", Decimal("3"))
+
+
+def test_seed_works_on_an_empty_database_with_the_apps_session_settings(db_session: Session):
+    """The app's sessions don't autoflush (app/core/db.py); seeding a fresh database must still
+    find the leads it just added (this broke `python -m seed` on a reset database)."""
+    db_session.autoflush = False
+    report = run(db_session, DEMO_PASSWORD)
+    assert report.created["leads"] == 3 and report.created["bill_readings"] == 3
