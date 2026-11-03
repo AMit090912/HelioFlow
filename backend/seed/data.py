@@ -66,13 +66,6 @@ LEAD_SEED_NOTE = (
     "Ownership and monthly bill are from the brief."
 )
 CONSENT_VERSION = "2026-11-v1"
-# The brief gives units and bill but no bill image: the seeded reading is a typed-in (manual)
-# confirmation of exactly those two numbers, and its preview says so.
-SEED_READING_PREVIEW_TEXT = (
-    "Sample lead from the client brief",
-    "No bill image: units and bill amount",
-    "were typed in from the brief.",
-)
 
 # §3.7. Decimals are stored as strings so JSON never turns them into floats.
 SETTINGS = {

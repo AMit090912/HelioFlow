@@ -286,7 +286,9 @@
       },
       "perMonth": "Per month, worked out from this {days}-day bill.",
       "otherPhoto": "Upload a different photo",
-      "keepPhoto": "Keep this photo"
+      "keepPhoto": "Keep this photo",
+      "enlarge": "See the bill full size",
+      "closePreview": "Close"
     },
     "fields": {
       "avg_monthly_units": "Average units per month",

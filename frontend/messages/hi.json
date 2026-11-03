@@ -289,7 +289,9 @@
       },
       "perMonth": "हर महीने का, इस {days} दिन के बिल से निकाला गया।",
       "otherPhoto": "दूसरी फ़ोटो अपलोड करें",
-      "keepPhoto": "यही फ़ोटो रखें"
+      "keepPhoto": "यही फ़ोटो रखें",
+      "enlarge": "बिल बड़ा करके देखें",
+      "closePreview": "बंद करें"
     },
     "fields": {
       "avg_monthly_units": "हर महीने औसत यूनिट",

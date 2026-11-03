@@ -4,8 +4,10 @@ import hashlib
 import io
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
+from decimal import Decimal
+from pathlib import Path
 
-from PIL import Image, ImageDraw
+from PIL import Image, ImageDraw, ImageFont
 from sqlalchemy import select
 from sqlalchemy.orm import Session
 
@@ -49,12 +51,43 @@ def _user(db: Session, report: SeedReport, role: str, password_hash: str, **fiel
     return user
 
 
-def _placeholder_png() -> bytes:
-    """An honest preview for a seeded reading: says there is no bill image."""
-    image = Image.new("RGB", (900, 600), "#F2F6F5")
+FONTS = Path(__file__).resolve().parents[1] / "app" / "assets" / "fonts"
+
+
+def _font(weight: str, size: int) -> ImageFont.FreeTypeFont:
+    return ImageFont.truetype(str(FONTS / f"Mukta-{weight}.ttf"), size)
+
+
+def _placeholder_png(code: str, units: Decimal, bill: Decimal) -> bytes:
+    """An honest stand-in for a seeded reading: the brief gives numbers, not a bill photo, so the
+    preview says so and shows the two values that were typed in."""
+    w, h = 900, 600
+    image = Image.new("RGB", (w, h), "#F2F6F5")
     draw = ImageDraw.Draw(image)
-    for i, line in enumerate(data.SEED_READING_PREVIEW_TEXT):
-        draw.text((60, 240 + i * 40), line, fill="#18211F")
+    draw.rounded_rectangle(
+        (40, 40, w - 40, h - 40), radius=28, fill="#FFFFFF", outline="#DCE4E2", width=2
+    )
+    draw.rounded_rectangle((40, 40, w - 40, 150), radius=28, fill="#012E2B")
+    draw.rectangle((40, 120, w - 40, 150), fill="#012E2B")
+    draw.text(
+        (80, 68), "Sample lead from the client brief", font=_font("SemiBold", 34), fill="#FFFFFF"
+    )
+    draw.text((w - 80, 76), code, font=_font("Regular", 26), fill="#F6DFA8", anchor="ra")
+    draw.text(
+        (80, 182),
+        "No bill photo. These values were typed in from the brief.",
+        font=_font("Regular", 26),
+        fill="#4F5D5A",
+    )
+    rows = (
+        ("Average units per month", f"{units.normalize():f} units"),
+        ("Monthly bill", f"₹{int(bill):,}"),
+    )
+    for i, (label, value) in enumerate(rows):
+        y = 270 + i * 110
+        draw.line((80, y - 18, w - 80, y - 18), fill="#DCE4E2", width=2)
+        draw.text((80, y + 10), label, font=_font("Regular", 30), fill="#4F5D5A")
+        draw.text((w - 80, y), value, font=_font("SemiBold", 44), fill="#18211F", anchor="ra")
     out = io.BytesIO()
     image.save(out, format="PNG")
     return out.getvalue()
@@ -62,7 +95,7 @@ def _placeholder_png() -> bytes:
 
 def _confirm_from_brief(db: Session, lead: Lead, units, bill, confirmed_by: User) -> None:
     """A typed-in (manual) confirmation of the brief's numbers, then the usual qualification."""
-    png = _placeholder_png()
+    png = _placeholder_png(lead.code, Decimal(units), Decimal(bill))
     file = BillFile(
         lead_id=lead.id,
         kind=BillKind.image,

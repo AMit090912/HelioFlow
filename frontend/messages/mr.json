@@ -289,7 +289,9 @@
       },
       "perMonth": "दरमहा, या {days} दिवसांच्या बिलातून काढलेले.",
       "otherPhoto": "दुसरा फोटो अपलोड करा",
-      "keepPhoto": "हाच फोटो ठेवा"
+      "keepPhoto": "हाच फोटो ठेवा",
+      "enlarge": "बिल मोठे करून पाहा",
+      "closePreview": "बंद करा"
     },
     "fields": {
       "avg_monthly_units": "दरमहा सरासरी युनिट",
