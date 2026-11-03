@@ -39,9 +39,15 @@ export type NextStep = {
   title: string;
   detail: string;
   section?: SectionId;
+  /** The step is a phone call: the card offers the homeowner's number. */
+  call?: boolean;
 };
 
-type LeadLike = { status: string; next_action: "survey_visit" | "call" | null };
+type LeadLike = {
+  status: string;
+  next_action: "survey_visit" | "call" | null;
+  score_reasons?: { code: string }[];
+};
 
 export function nextStageOf(stage: Stage): Stage | undefined {
   return STAGES[STAGES.indexOf(stage) + 1];
@@ -69,10 +75,23 @@ export function nextStep(lead: LeadLike, stage?: Stage | null): NextStep {
         section: "roof",
       };
     case "call_pending":
+      // Tenants aren't quoted under the current rules (the panels go on the landlord's roof).
+      // The homeowner was told "we'll talk about options that work for you and your landlord".
+      if (lead.score_reasons?.some((r) => r.code === "tenant")) {
+        return {
+          step: "check",
+          owner: "you",
+          title: "Call to talk through options",
+          call: true,
+          detail:
+            "This homeowner rents, and tenants can't be quoted under the current rules. Call to explain and talk through options with them and their landlord. If they aren't going ahead, close the lead with the reason.",
+        };
+      }
       return {
         step: "check",
         owner: "you",
         title: "Call to check the roof",
+        call: true,
         detail:
           "Confirm the open roof area and sanctioned load on the phone and save them. If a visit is worth it, upgrade to a survey visit.",
         section: "roof",

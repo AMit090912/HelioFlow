@@ -72,8 +72,12 @@ export function NextStepCard({ next, phone }: { next: NextStep; phone: string | 
           {next.detail ? <p className={cn("mt-1.5 text-[0.9375rem]", yours ? "text-white/75" : "text-ink-2")}>{next.detail}</p> : null}
         </div>
         <div className="flex flex-wrap gap-2">
-          {next.owner === "homeowner" && phone ? (
-            <Button asChild variant="outline" className="h-11">
+          {(next.owner === "homeowner" || next.call) && phone ? (
+            <Button
+              asChild
+              variant={yours ? "default" : "outline"}
+              className={cn("h-11", yours && (section ? "bg-white/10 text-white hover:bg-white/20" : "bg-gold text-night hover:bg-gold/90"))}
+            >
               <a href={`tel:+91${phone}`}>
                 <Phone className="size-4" aria-hidden /> Call the homeowner
               </a>
