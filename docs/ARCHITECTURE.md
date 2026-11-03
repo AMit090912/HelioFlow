@@ -433,8 +433,8 @@ Every attempt is recorded in `bill_readings.attempts`. Raw provider responses ar
 
 | Path | Primary (Groq) | Fallback (Gemini) |
 |---|---|---|
-| Photo or scanned PDF (vision) | `qwen/qwen3.8-27b` (accepts images; the Llama vision models were not available on this account) | `gemini-2.5-flash` |
-| Text PDF | `openai/gpt-oss-120b` | `gemini-2.5-flash` |
+| Photo or scanned PDF (vision) | `qwen/qwen3.8-27b` (accepts images; the Llama vision models were not available on this account) | `gemini-3.5-flash`, thinking level low (2.5-flash is closed to new keys; 3.8 was overloaded in testing, 2026-11-03) |
+| Text PDF | `openai/gpt-oss-120b` | `gemini-3.5-flash`, thinking level low (2.5-flash is closed to new keys; 3.8 was overloaded in testing, 2026-11-03) |
 
 **Live check on the synthetic sample bill** (`scripts/live_bill_check.py`): all three paths read all six fields correctly with confidence 1.0 (Groq vision 2.4 s including one real rate-limit retry, Groq text 1.7 s, Gemini 6.0 s). Groq is fronted by Cloudflare, which rejects default library user agents, so every request sends an explicit `User-Agent`.
 

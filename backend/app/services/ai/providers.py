@@ -167,7 +167,17 @@ class GeminiProvider:
         body = {
             "systemInstruction": {"parts": [{"text": SYSTEM_PROMPT}]},
             "contents": [{"role": "user", "parts": parts}],
-            "generationConfig": {"temperature": 0, "responseMimeType": "application/json"},
+            "generationConfig": {
+                "temperature": 0,
+                "responseMimeType": "application/json",
+                # Reading a bill needs no long reasoning; Gemini 3 models think by default,
+                # which made reads take 40–90 s. Older models don't accept this setting.
+                **(
+                    {"thinkingConfig": {"thinkingLevel": "low"}}
+                    if self._model.startswith("gemini-3")
+                    else {}
+                ),
+            },
         }
         reply = _post(
             self._client, self.URL.format(model=self._model), {"x-goog-api-key": self._key}, body

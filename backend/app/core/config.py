@@ -34,7 +34,7 @@ class Settings(BaseSettings):
     groq_vision_model: str = "qwen/qwen3.8-27b"
     groq_text_model: str = "openai/gpt-oss-120b"
     gemini_api_key: str = ""
-    gemini_model: str = "gemini-2.5-flash"
+    gemini_model: str = "gemini-3.5-flash"
     ai_timeout_seconds: float = 20.0
 
     @field_validator("groq_vision_model", "groq_text_model", "gemini_model", mode="before")
