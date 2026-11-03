@@ -33,7 +33,17 @@ const FLAG_FIELD: Record<string, FieldName> = {
   tariff_category: "tariff_category",
   fixed_charge: "fixed_charge_monthly",
 };
-const FLAG_ORDER = ["missing", "out_of_range", "differs_from_declared", "rate_unusual", "format_unusual", "low_confidence"];
+const FLAG_ORDER = [
+  "missing",
+  "out_of_range",
+  "units_mismatch_readings",
+  "may_include_arrears",
+  "differs_from_declared",
+  "rate_unusual",
+  "format_unusual",
+  "long_billing_period",
+  "low_confidence",
+];
 
 function flagsByField(reading: Reading): Partial<Record<FieldName, string>> {
   const out: Partial<Record<FieldName, string>> = {};
@@ -112,11 +122,12 @@ export function ValuesForm({
     resolver: zodResolver(schema),
     defaultValues: {
       avg_monthly_units: s(ai ? reading.suggested_avg_monthly_units : null),
-      bill_amount: s(ai?.bill_amount.value),
+      // Per-month figures (a multi-month bill is scaled to a month); fall back to the value as read.
+      bill_amount: s(ai ? (reading.suggested_bill_amount ?? ai.bill_amount.value) : null),
       sanctioned_load_kw: s(ai?.sanctioned_load_kw.value),
       consumer_number: s(ai?.consumer_number.value),
       tariff_category: s(ai?.tariff_category.value),
-      fixed_charge_monthly: s(ai?.fixed_charge.value),
+      fixed_charge_monthly: s(ai ? (reading.suggested_fixed_charge ?? ai.fixed_charge.value) : null),
     },
   });
 
@@ -190,6 +201,8 @@ export function ValuesForm({
   };
 
   const method = ai ? reading.suggested_method : null;
+  const days = reading.billing_days;
+  const perMonth = ai && days && (days < 25 || days > 35) ? t("review.perMonth", { days }) : undefined;
 
   return (
     <form onSubmit={handleSubmit(onSubmit)} noValidate className="space-y-6">
@@ -202,7 +215,9 @@ export function ValuesForm({
 
       {field("avg_monthly_units", {
         unit: t("units.units"),
-        hint: method ? t(`review.suggested.${method}`, { count: months?.length ?? 0 }) : undefined,
+        hint: method
+          ? t(`review.suggested.${method}`, { count: months?.length ?? 0, days: reading.billing_days ?? 0 })
+          : undefined,
       })}
       {months && months.length > 0 ? (
         <div className="-mt-2">
@@ -216,11 +231,11 @@ export function ValuesForm({
           </ul>
         </div>
       ) : null}
-      {field("bill_amount", { unit: t("units.rupees"), unitAt: "start" })}
+      {field("bill_amount", { unit: t("units.rupees"), unitAt: "start", hint: perMonth })}
       {field("sanctioned_load_kw", { unit: t("units.kw"), optional: true })}
       {field("consumer_number", { inputMode: "numeric", optional: true })}
       {field("tariff_category", { inputMode: "text", optional: true })}
-      {field("fixed_charge_monthly", { unit: t("units.rupees"), unitAt: "start", optional: true })}
+      {field("fixed_charge_monthly", { unit: t("units.rupees"), unitAt: "start", optional: true, hint: perMonth })}
 
       {formError ? (
         <p role="alert" className="rounded-xl border border-destructive/30 bg-destructive/5 px-3.5 py-3 text-sm text-destructive">

@@ -94,7 +94,7 @@ def test_upload_reads_the_bill_in_the_background(client, owner, ai):
     assert body["source_path"] == "vision"
     assert body["provider"] == "groq" and body["is_demo"] is False
     assert body["ai"]["current_units"] == {"value": 340, "confidence": 0.96}
-    assert body["suggested_avg_monthly_units"] == "340.00"
+    assert body["suggested_avg_monthly_units"] == "340"  # plain, like every number
     assert body["suggested_method"] == "history_mean"
     assert body["flags"] == {}
     assert body["attempts"][0]["outcome"] == "ok"
@@ -455,3 +455,54 @@ def test_upload_is_rate_limited(client, owner):
         upload(client, lead, f"x{i}.jpg", content=b"not-an-image")
     res = upload(client, lead, "clear.jpg")
     assert (res.status_code, res.json()["error"]["code"]) == (429, "RATE_LIMITED")
+
+
+def test_multi_month_bill_is_confirmed_per_month(client, db_session, ai):
+    """A 93-day spot bill: the form is pre-filled with per-month figures, and confirming without
+    edits stores those, not the 3-month totals (A-30)."""
+    from tests.unit.ai.test_receipt_bills import SPOT_93_DAYS
+
+    ai["providers"] = [Scripted("groq", SPOT_93_DAYS)]
+    owner, lead = make_owner(db_session, "spot@example.com")
+    sign_in(client, "spot@example.com")
+    up = client.post(
+        f"/api/leads/{lead.id}/bills",
+        headers=CSRF,
+        files={"file": ("bill.jpg", (BILLS / "clear.jpg").read_bytes())},
+    ).json()
+    reading = client.get(f"/api/bills/{up['id']}").json()
+    assert reading["billing_days"] == 93
+    assert reading["suggested_method"] == "period_normalised"
+    assert reading["suggested_avg_monthly_units"] == "568.1"
+    assert reading["suggested_bill_amount"] == "4211.84"
+    assert reading["suggested_fixed_charge"] == "78.49"
+    assert reading["flags"]["current_units"] == ["long_billing_period"]
+    # What the form sends when the person accepts the pre-filled values unchanged.
+    form = {
+        "avg_monthly_units": reading["suggested_avg_monthly_units"],
+        "bill_amount": reading["suggested_bill_amount"],
+        "fixed_charge_monthly": reading["suggested_fixed_charge"],
+    }
+    res = client.post(f"/api/bills/{up['id']}/confirm", headers=CSRF, json=form)
+    assert res.status_code == 200, res.text
+    confirmed = res.json()
+    assert confirmed["edited_fields"] == []  # per-month figures are the proposal, not an edit
+    assert confirmed["confirmed"]["avg_monthly_units"] == "568.1"
+    assert confirmed["confirmed"]["bill_amount"] == "4211.84"
+    assert confirmed["confirmed"]["fixed_charge_monthly"] == "78.49"
+
+
+def test_foreign_bill_asks_for_a_new_upload(client, db_session, ai):
+    from tests.unit.ai.test_receipt_bills import SPOT_93_DAYS
+
+    ai["providers"] = [Scripted("groq", {**SPOT_93_DAYS, "is_indian_bill": False})]
+    owner, lead = make_owner(db_session, "cebu@example.com")
+    sign_in(client, "cebu@example.com")
+    up = client.post(
+        f"/api/leads/{lead.id}/bills",
+        headers=CSRF,
+        files={"file": ("bill.jpg", (BILLS / "clear.jpg").read_bytes())},
+    ).json()
+    reading = client.get(f"/api/bills/{up['id']}").json()
+    assert reading["status"] == "needs_reupload"
+    assert "not_indian_bill" in reading["flags"]["document"]

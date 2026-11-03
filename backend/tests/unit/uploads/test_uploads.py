@@ -196,3 +196,37 @@ def test_washed_out_photo_is_too_bright():
     buf = io.BytesIO()
     blank.save(buf, "JPEG")
     assert "too_bright" in check_quality(buf.getvalue()).reasons
+
+
+# --- Narrow thermal "spot bill" receipts (A-16 revised) ---
+
+
+def _receipt(width=360, height=1100, blur=0.0) -> bytes:
+    from PIL import ImageDraw, ImageFilter
+
+    img = Image.new("RGB", (width, height), (232, 232, 236))
+    draw = ImageDraw.Draw(img)
+    for row, y in enumerate(range(20, height - 20, 22)):
+        draw.text(
+            (14, y), f"UNITS: {row * 7 % 900}   DAYS: {30 + row % 64}  KWH", fill=(60, 50, 120)
+        )
+    if blur:
+        img = img.filter(ImageFilter.GaussianBlur(blur))
+    buf = io.BytesIO()
+    img.save(buf, "JPEG", quality=92)
+    return buf.getvalue()
+
+
+def test_narrow_sharp_receipt_passes():
+    q = check_quality(normalise_image(_receipt()).jpeg)
+    assert q.ok, q
+
+
+def test_blurred_receipt_is_still_blurry():
+    q = check_quality(normalise_image(_receipt(blur=2.5)).jpeg)
+    assert "blurry" in q.reasons
+
+
+def test_small_squat_image_is_still_too_small():
+    q = check_quality(normalise_image(_receipt(width=360, height=500)).jpeg)
+    assert "too_small" in q.reasons

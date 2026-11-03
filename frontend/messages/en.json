@@ -256,8 +256,11 @@
       "monthsTitle": "Units in recent months",
       "suggested": {
         "history_mean": "Average of the {count} months shown on your bill.",
-        "current_month": "From this month's bill. Adjust it if this month was unusual."
-      }
+        "current_month": "From this month's bill. Adjust it if this month was unusual.",
+        "period_normalised": "Worked out per month from this {days}-day bill.",
+        "meter_readings": "Worked out from the meter readings on your bill."
+      },
+      "perMonth": "Per month, worked out from this {days}-day bill."
     },
     "fields": {
       "avg_monthly_units": "Average units per month",
@@ -286,7 +289,10 @@
       "format_unusual": "This doesn't look like a usual consumer number. Please check it.",
       "rate_unusual": "The amount and units don't match a usual tariff. Please check both.",
       "differs_from_declared": "This is quite different from the bill amount you told us. Please check it.",
-      "missing": "We couldn't find this on the bill. Please type it in."
+      "missing": "We couldn't find this on the bill. Please type it in.",
+      "long_billing_period": "This bill covers more than one month, so we worked out a monthly figure. Please check it.",
+      "units_mismatch_readings": "The units don't match the meter readings on the bill. Please check them.",
+      "may_include_arrears": "This may include old unpaid amounts (arrears). Enter only this bill's charges."
     },
     "reupload": {
       "title": "We need a clearer copy",
@@ -297,7 +303,8 @@
         "too_bright": "The photo is washed out. Avoid direct light or flash on the bill.",
         "blurry": "The photo is blurry. Hold the phone steady and tap to focus.",
         "not_electricity_bill": "This doesn't look like an electricity bill.",
-        "legibility_poor": "The text on the bill is hard to read."
+        "legibility_poor": "The text on the bill is hard to read.",
+        "not_indian_bill": "This doesn't look like an Indian electricity bill. Please upload a bill from your electricity company in India."
       },
       "cta": "Upload a new photo",
       "orType": "Or type the values in yourself"

@@ -22,7 +22,8 @@ from sqlalchemy.orm import Session
 from app.models import BillFile, BillReading, Lead, User
 from app.models.enums import BillKind, LeadStatus, ReadingSource, ReadingStatus
 from app.schemas.bills import ConfirmIn
-from app.services.ai import Provider, run_chain, sanity_flags, suggested_average_units
+from app.services.ai import Provider, run_chain, sanity_flags
+from app.services.ai.validation import monthly_figures
 from app.services.qualification import qualify_lead
 from app.services.uploads import (
     UploadError,
@@ -215,17 +216,21 @@ def process_reading(
             attempts[-1] = {**attempts[-1], "raw": result.raw}  # kept server-side, never logged
             extraction = result.extraction
             flags = sanity_flags(extraction, declared_bill=job.declared_bill)
-            avg, method = suggested_average_units(extraction)
+            monthly = monthly_figures(extraction)
+            # What the person is asked to confirm: per-month figures, never a 3-month total.
             flags["_suggested"] = {  # type: ignore[assignment]
-                "avg_monthly_units": None if avg is None else str(avg),
-                "method": method,
+                "avg_monthly_units": _str(monthly.avg_monthly_units),
+                "method": monthly.method,
+                "bill_amount": _str(monthly.bill_amount),
+                "fixed_charge_monthly": _str(monthly.fixed_charge),
+                "billing_days": monthly.billing_days,
             }
             reading.attempts = [*reading.attempts, *attempts]
             reading.ai_values = extraction.model_dump(mode="json")
             reading.validation_flags = flags
             reading.provider, reading.model = result.provider, result.model
             reading.prompt_version = attempts[-1]["prompt_version"]
-            unreadable = {"not_electricity_bill", "legibility_poor"} & set(
+            unreadable = {"not_electricity_bill", "not_indian_bill", "legibility_poor"} & set(
                 flags.get("document", [])
             )
             reading.status = (
@@ -254,6 +259,10 @@ def sweep_if_stale(db: Session, reading: BillReading, now: datetime | None = Non
         db.commit()
 
 
+def _str(value: Any) -> str | None:
+    return None if value is None else str(value)
+
+
 def _norm(value: Any) -> str | None:
     """Comparable form, so "340.00", 340 and Decimal("340") count as the same value."""
     if value is None:
@@ -278,8 +287,12 @@ def confirm_reading(
         "sanctioned_load_kw": (ai.get("sanctioned_load_kw") or {}).get("value"),
         "monthly_units": [m["units"] for m in ai_units] if ai_units else None,
         "avg_monthly_units": suggested.get("avg_monthly_units"),
-        "bill_amount": (ai.get("bill_amount") or {}).get("value"),
-        "fixed_charge_monthly": (ai.get("fixed_charge") or {}).get("value"),
+        # Per-month figures when the bill covers another period (A-30); bill-v1 readings have no
+        # such suggestion and fall back to the value as read.
+        "bill_amount": suggested.get("bill_amount", (ai.get("bill_amount") or {}).get("value")),
+        "fixed_charge_monthly": suggested.get(
+            "fixed_charge_monthly", (ai.get("fixed_charge") or {}).get("value")
+        ),
     }
     # A field the person didn't send keeps the AI's proposal; sending null clears it. The merged
     # result is validated again, so an AI value (e.g. 3000 "kW" that was really watts) gets the

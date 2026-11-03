@@ -95,7 +95,11 @@ export type Reading = {
   ai: AiValues | null;
   flags: Record<string, string[]>;
   suggested_avg_monthly_units: string | null;
-  suggested_method: "history_mean" | "current_month" | null;
+  suggested_method: "history_mean" | "current_month" | "period_normalised" | "meter_readings" | null;
+  /** Per-month bill and fixed charge (a 93-day bill is scaled to a month, A-30). */
+  suggested_bill_amount: string | null;
+  suggested_fixed_charge: string | null;
+  billing_days: number | null;
   confirmed: (Omit<ConfirmValues, "avg_monthly_units" | "bill_amount"> & {
     avg_monthly_units: string | null;
     bill_amount: string | null;

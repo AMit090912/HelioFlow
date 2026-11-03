@@ -392,11 +392,27 @@ The model's own `legibility = poor` or `is_electricity_bill = false` also leads 
   "monthly_units":      {"value": [{"month": "YYYY-MM", "units": 0}], "confidence": 0.0},
   "current_units":      {"value": "integer|null", "confidence": 0.0},
   "bill_amount":        {"value": "number|null", "confidence": 0.0},
-  "fixed_charge":       {"value": "number|null", "confidence": 0.0}
+  "fixed_charge":       {"value": "number|null", "confidence": 0.0},
+  "is_indian_bill":     true,
+  "billing_days":       {"value": "integer|null", "confidence": 0.0},
+  "previous_reading":   {"value": "number|null", "confidence": 0.0},
+  "present_reading":    {"value": "number|null", "confidence": 0.0},
+  "meter_multiplier":   {"value": "number|null", "confidence": 0.0},
+  "arrears":            {"value": "number|null", "confidence": 0.0},
+  "total_due":          {"value": "number|null", "confidence": 0.0}
 }
 ```
 
-The prompt instructs the model to return `null` when a value is not visible and **never to guess**. `fixed_charge` is extracted when it is printed, to support §10.
+The prompt instructs the model to return `null` when a value is not visible and **never to guess**, including masked or redacted digits. `fixed_charge` is extracted when it is printed, to support §10.
+
+**Prompt `bill-v2` (after real spot-bill samples).** Indian bills are not always monthly A4 bills. Thermal "bill-cum-notice" receipts (e.g. TSSPDCL) often cover 60–93 days and print several amounts. The fields added in v2 exist only to get the **same calculation inputs** right; no new form fields are asked of the homeowner.
+- `bill_amount` is **this period's charges** (BILL AMOUNT), never TOTAL DUE or anything including arrears. `arrears` and `total_due` are read only to catch that mistake (flag `may_include_arrears`).
+- `billing_days` lets a multi-month bill be converted to an average month **[A-30]**: units, bill and fixed charge are each × (365/12) ÷ days. Example: 1,737 units over 93 days → 568.1 units/month.
+- `previous_reading`/`present_reading`/`meter_multiplier` cross-check the units (flag `units_mismatch_readings`) and supply them when they aren't printed.
+- Labels it maps include: USC / SC.NO → consumer number; CONTRACTED LOAD → sanctioned load; CAT → tariff; CUST CHARGES → fixed charge.
+- `is_indian_bill: false` (e.g. a Philippine cooperative bill) sends the homeowner to re-upload (`not_indian_bill`).
+- A provider answering `"field": null` instead of `{"value": null}` is accepted (Gemini does this).
+- Live-checked on the user's sample bills (Groq and Gemini): every calculation input read correctly, masked consumer numbers returned as null, and the foreign bill rejected.
 
 ### 6.2 Provider chain
 
@@ -822,7 +838,7 @@ Homeowner signs up through the lead form → uploads a synthetic bill → extrac
 | A-13 | Savings model simplifications | No degradation, no escalation, average rate | Simple, explainable estimate | No (documented) | No |
 | A-14 | Roof types | RCC flat, metal sheet, tiled, other | Form needs options | Code enum | Yes |
 | A-15 | Extra Low-score reasons | Roof < 1 kW, usage unknown | Brief names only tenant and small bill | Yes (toggle) | Yes |
-| A-16 | Photo quality thresholds | 700 px, brightness 40–235, edge variance calibrated | Re-upload trigger | Yes (env/settings) | No |
+| A-16 | Photo quality thresholds | 700 px short side (receipt shape h ≥ 2.2 w: 320 px short, 900 px long), brightness 40–235, edge variance measured without enlarging | Re-upload trigger; narrow thermal receipts are readable | Yes (env/settings) | No |
 | A-17 | HEIC not accepted | — | iOS converts to JPEG for web | No | No |
 | A-18 | Consumer number format check | Digits only, 9–15 (soft flag) | Exact DISCOM format not given | Yes | Yes |
 | A-19 | Subsidy eligibility | Residential segment only | Brief says "central residential scheme" | Yes (rule segment) | **Yes** |
@@ -836,6 +852,7 @@ Homeowner signs up through the lead form → uploads a synthetic bill → extrac
 | A-27 | Number format in hi/mr | Western digits, Indian grouping | Consistency with bills and payments | next-intl config | Yes |
 | A-28 | Staff UI language | English only | Brief's language constraint concerns customers | — | Yes |
 | A-29 | Roof verification before quoting | Survey or staff call confirmation required | Final size must reflect real roof capacity | No | Yes |
+| A-30 | Multi-month bills | A bill covering 25–35 days counts as one month; otherwise units, bill and fixed charge × (365/12) ÷ days | Spot bills often cover 2–3 months | No | Yes |
 
 ---
 

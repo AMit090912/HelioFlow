@@ -58,6 +58,10 @@ class ReadingOut(BaseModel):
     flags: dict[str, list[str]]
     suggested_avg_monthly_units: Decimal | None
     suggested_method: str | None
+    # Per-month bill and fixed charge, and the period they came from (A-30). Pre-fill the form.
+    suggested_bill_amount: Decimal | None = None
+    suggested_fixed_charge: Decimal | None = None
+    billing_days: int | None = None
     confirmed: ConfirmedValues | None
     edited_fields: list[str]
     provider: str | None
@@ -65,6 +69,12 @@ class ReadingOut(BaseModel):
     is_demo: bool
     attempts: list[dict[str, Any]]
     created_at: datetime
+
+    @field_serializer(
+        "suggested_avg_monthly_units", "suggested_bill_amount", "suggested_fixed_charge"
+    )
+    def _plain_suggestions(self, value: Decimal | None) -> str | None:
+        return plain(value)
 
     @classmethod
     def of(cls, reading: BillReading, kind: str) -> "ReadingOut":
@@ -92,6 +102,9 @@ class ReadingOut(BaseModel):
             flags=flags,
             suggested_avg_monthly_units=suggestion.get("avg_monthly_units"),
             suggested_method=suggestion.get("method"),
+            suggested_bill_amount=suggestion.get("bill_amount"),
+            suggested_fixed_charge=suggestion.get("fixed_charge_monthly"),
+            billing_days=suggestion.get("billing_days"),
             confirmed=confirmed,
             edited_fields=list(reading.edited_fields or []),
             provider=reading.provider,

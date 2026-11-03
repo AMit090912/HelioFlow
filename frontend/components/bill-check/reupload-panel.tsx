@@ -5,7 +5,15 @@ import { useTranslations } from "next-intl";
 import { BillTips, BillUploader } from "@/components/lead-form/step-bill";
 import type { Reading } from "@/lib/leads";
 
-const KNOWN = ["too_small", "too_dark", "too_bright", "blurry", "not_electricity_bill", "legibility_poor"] as const;
+const KNOWN = [
+  "too_small",
+  "too_dark",
+  "too_bright",
+  "blurry",
+  "not_electricity_bill",
+  "not_indian_bill",
+  "legibility_poor",
+] as const;
 type Reason = (typeof KNOWN)[number];
 
 /** Why this copy can't be used — from the photo check or from what the AI saw — in plain words. */

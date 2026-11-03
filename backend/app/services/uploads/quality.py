@@ -4,6 +4,12 @@ Thresholds are assumption A-16, calibrated on the synthetic fixtures
 (scripts/make_bill_fixtures.py):
 clear bill sharpness ≈ 1964, Gaussian-blurred ≈ 222; dark mean ≈ 29 vs ≈ 248 normal.
 A white bill is naturally bright, so "too bright" needs both high brightness and almost no contrast.
+
+Thermal "spot bill" receipts (e.g. TSSPDCL) are long and narrow: a phone photo of one is often only
+350–450 px wide yet perfectly readable. A receipt shape (height ≥ 2.2 × width) therefore needs a
+short side of 320 px and a long side of 900 px instead of 700 px (A-16, revised after real samples).
+Sharpness is measured at the photo's own scale, never enlarged: enlarging a narrow receipt to
+1,000 px would blur it and fail a sharp photo.
 """
 
 import io
@@ -12,11 +18,14 @@ from dataclasses import dataclass
 from PIL import Image, ImageFilter, ImageStat
 
 MIN_SHORT_SIDE = 700
+RECEIPT_ASPECT = 2.2
+RECEIPT_MIN_SHORT_SIDE = 320
+RECEIPT_MIN_LONG_SIDE = 900
 MIN_BRIGHTNESS = 40
 WASHED_OUT_BRIGHTNESS = 240
 WASHED_OUT_CONTRAST = 10
 MIN_SHARPNESS = 600
-_MEASURE_WIDTH = 1000  # sharpness is measured at a fixed scale so image size doesn't skew it
+_MEASURE_WIDTH = 1000  # larger photos are measured at this width so size doesn't skew sharpness
 
 
 @dataclass(frozen=True)
@@ -30,13 +39,19 @@ def check_quality(jpeg: bytes) -> Quality:
     with Image.open(io.BytesIO(jpeg)) as img:
         gray = img.convert("L")
     width, height = gray.size
-    measured = gray.resize((_MEASURE_WIDTH, max(1, round(_MEASURE_WIDTH * height / width))))
+    scale_to = min(width, _MEASURE_WIDTH)  # shrink big photos; never enlarge small ones
+    measured = gray.resize((scale_to, max(1, round(scale_to * height / width))))
     stats = ImageStat.Stat(measured)
     brightness, contrast = stats.mean[0], stats.stddev[0]
     sharpness = ImageStat.Stat(measured.filter(ImageFilter.FIND_EDGES)).var[0]
 
     reasons = []
-    if min(width, height) < MIN_SHORT_SIDE:
+    short, long = min(width, height), max(width, height)
+    receipt = long >= RECEIPT_ASPECT * short
+    if receipt:
+        if short < RECEIPT_MIN_SHORT_SIDE or long < RECEIPT_MIN_LONG_SIDE:
+            reasons.append("too_small")
+    elif short < MIN_SHORT_SIDE:
         reasons.append("too_small")
     if brightness < MIN_BRIGHTNESS:
         reasons.append("too_dark")
