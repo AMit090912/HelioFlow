@@ -83,3 +83,10 @@ def test_pdf_assumptions_use_the_quotes_own_usable_share(client, lead):  # noqa:
     quote = send(client, lead, [override]).json()
     text = text_of(client.get(f"/api/quotes/{quote['id']}/pdf?lang=en").content)
     assert "About 80% of the electricity" in text and "90%" not in text
+
+
+def test_pdf_carries_the_logo(client, lead):  # noqa: F811
+    verify(client, lead)
+    quote = send(client, lead).json()
+    pdf = PdfReader(io.BytesIO(client.get(f"/api/quotes/{quote['id']}/pdf?lang=hi").content))
+    assert len(pdf.pages[0].images) >= 1  # the HelioFlow mark

@@ -19,7 +19,7 @@ from reportlab.lib.styles import ParagraphStyle
 from reportlab.lib.units import mm
 from reportlab.pdfbase import pdfmetrics, ttfonts
 from reportlab.pdfbase.ttfonts import TTFont
-from reportlab.platypus import Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
+from reportlab.platypus import Image, Paragraph, SimpleDocTemplate, Spacer, Table, TableStyle
 from reportlab.platypus import paragraph as rl_paragraph
 
 from app.schemas.quotes import QuoteView
@@ -27,6 +27,7 @@ from app.services.notify import inr
 from app.services.pdf.strings import ASSUMPTION_KEYS, STRINGS
 
 FONTS = Path(__file__).resolve().parents[2] / "assets" / "fonts"
+BRAND = Path(__file__).resolve().parents[2] / "assets" / "brand"
 TEAL = colors.HexColor("#006863")
 NIGHT = colors.HexColor("#012E2B")
 GOLD_SOFT = colors.HexColor("#F6DFA8")
@@ -121,6 +122,23 @@ def _focus(view: QuoteView) -> dict[str, Any]:
     return next(o for o in view.options if o["recommended"])
 
 
+def _brand() -> Table:
+    """The HelioFlow mark beside the wordmark, as on the website."""
+    mark = Image(str(BRAND / "helio-mark.png"), width=11 * mm, height=11 * mm)
+    lockup = Table([[mark, P("HelioFlow", "brand")]], colWidths=[13 * mm, None])
+    lockup.setStyle(
+        TableStyle(
+            [
+                ("VALIGN", (0, 0), (-1, -1), "MIDDLE"),
+                ("LEFTPADDING", (0, 0), (-1, -1), 0),
+                ("RIGHTPADDING", (0, 0), (-1, -1), 0),
+            ]
+        )
+    )
+    lockup.hAlign = "LEFT"
+    return lockup
+
+
 def render_quote_pdf(view: QuoteView, locale: Locale) -> bytes:
     _fonts()
     t = STRINGS[locale]
@@ -142,7 +160,7 @@ def render_quote_pdf(view: QuoteView, locale: Locale) -> bytes:
     header = Table(
         [
             [
-                P("HelioFlow", "brand"),
+                _brand(),
                 [
                     P(t["quote_no"].format(number=view.number), "meta"),
                     P(t["dated"].format(date=view.priced_on.strftime("%d-%m-%Y")), "meta"),
