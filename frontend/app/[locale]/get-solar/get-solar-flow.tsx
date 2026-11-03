@@ -7,6 +7,7 @@ import { useTranslations } from "next-intl";
 import { useEffect, useRef, useState, useSyncExternalStore, type ReactNode } from "react";
 
 import { Logo } from "@/components/brand/logo";
+import { SignInSunrise } from "@/components/illustrations/sign-in-story";
 import { SpotAccount, SpotHome, SpotUpload } from "@/components/illustrations/spot";
 import {
   clearDraft,
@@ -187,9 +188,11 @@ function Flow() {
   return (
     <div className="grid min-h-dvh lg:grid-cols-[minmax(340px,0.85fr)_1.4fr]">
       {/* The sky: brand, promise and the sun's path across the three steps. */}
-      <aside className="relative overflow-hidden bg-night text-white">
+      {/* Desktop: pinned to the viewport, so the brand and the step path stay in view while the
+          form scrolls beside it. */}
+      <aside className="relative overflow-hidden bg-night text-white lg:sticky lg:top-0 lg:h-dvh lg:self-start">
         <div aria-hidden className="pointer-events-none absolute -right-24 -top-24 size-72 rounded-full bg-gold/10 blur-2xl" />
-        <div className="relative flex h-full flex-col gap-6 px-4 pb-8 pt-3 sm:px-6 lg:min-h-dvh lg:gap-12 lg:px-10 lg:pb-12 lg:pt-8">
+        <div className="relative flex h-full flex-col gap-6 px-4 pb-8 pt-3 sm:px-6 lg:gap-12 lg:px-10 lg:pb-12 lg:pt-8">
           <div className="flex h-14 items-center justify-between lg:h-auto">
             <Link href={homeFor(user)} aria-label={tc("appName")} className="rounded-md">
               <Logo tone="dark" />
@@ -202,6 +205,10 @@ function Flow() {
           </div>
           <SunPath steps={steps} current={current} label={stepLabel} className="max-w-sm lg:mt-4" />
           <p className="mt-auto hidden max-w-xs text-sm text-white/55 lg:block">{t("bill.privacy")}</p>
+          {/* The brand sunrise closes the column, so the pinned panel never looks empty. */}
+          <div className="relative -mx-10 -mb-12 hidden h-52 lg:block">
+            <SignInSunrise className="absolute inset-0 size-full" />
+          </div>
         </div>
       </aside>
 
