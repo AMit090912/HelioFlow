@@ -202,7 +202,7 @@ function SystemCard({ lead }: { lead: LeadMine }) {
             </div>
           ) : null}
         </dl>
-        <Link href={`/my/quote/${quote.id}`} className="mt-3 inline-flex min-h-11 items-center font-medium text-teal hover:underline">
+        <Link href={`/my/quote/${quote.id}`} className="mt-1 inline-flex min-h-11 items-center font-medium text-teal hover:underline">
           {t("quote.cta")}
         </Link>
       </section>
@@ -238,11 +238,11 @@ function BillSummary({ lead, readingId }: { lead: LeadMine; readingId: string })
     [t("roof"), `${formatNumber(lead.roof_area_sqft, locale, 0)} ${tr("unit")}`],
   ];
   return (
-    <section className="rounded-3xl border border-border bg-background p-6">
+    <section className="rounded-3xl border border-border bg-background px-6 py-5">
       <h2 className="text-sm text-ink-2">{t("title")}</h2>
-      <dl className="mt-2 divide-y divide-border">
+      <dl className="mt-1 divide-y divide-border">
         {rows.map(([k, v]) => (
-          <div key={k} className="flex items-baseline justify-between gap-4 py-2">
+          <div key={k} className="flex items-baseline justify-between gap-4 py-1.5 text-[0.9375rem]">
             <dt className="text-ink-2">{k}</dt>
             <dd className="font-medium text-ink tabular">{v}</dd>
           </div>
