@@ -293,5 +293,12 @@ Names only. Values are set in each host's dashboard, or in local files that git 
 - **Upload limits per homeowner.** 10 accepted bills and 30 attempts an hour.
 - **Simulated services.** WhatsApp messages are stored and shown as "Simulated, not sent". The
   advance gets a `SIMULATED-` reference.
+- **Screens don't update live.** When one side acts (sales sends a quote, the homeowner accepts, a
+  stage moves), the other side's open screen doesn't change until the page is refreshed. Only the
+  bill-reading progress updates by itself, and the homeowner's dashboard reloads when its tab is
+  opened again. Live updates (WebSockets or server-sent events) are planned for a future version.
+- **No email or in-app notifications.** The homeowner gets no email when a quote is sent or
+  updated, and sales gets no alert for a new lead or an accepted quote; they see it by opening the
+  inbox. Planned for a future version.
 - **Hosting logs.** The app removes status-link tokens from its own logs. Render and Vercel keep
   their own request logs, which the app can't change.
